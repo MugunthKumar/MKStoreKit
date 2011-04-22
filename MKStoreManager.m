@@ -1,6 +1,6 @@
 //
 //  MKStoreManager.m
-//  MKStoreKit
+//  MKStoreKit (Version 3.5)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
 //  Copyright 2010 Steinlogic. All rights reserved.
@@ -19,6 +19,7 @@
 //	if you are re-publishing after editing, please retain the above copyright notices
 
 #import "MKStoreManager.h"
+#import "NSData+Base64.h"
 
 @interface MKStoreManager (PrivateMethods)
 
@@ -33,6 +34,7 @@
 
 @synthesize purchasableObjects = _purchasableObjects;
 @synthesize storeObserver = _storeObserver;
+@synthesize latestReceiptString = _latestReceiptString;
 
 static NSString *ownServer = nil;
 
@@ -76,6 +78,8 @@ static MKStoreManager* _sharedStoreManager;
 			_sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
 			[_sharedStoreManager requestProductData];						
 			_sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
+            _sharedStoreManager.latestReceiptString = [[NSUserDefaults standardUserDefaults] stringForKey:kReceiptStringKey];
+
 			[[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];			
 #endif
         }
@@ -136,7 +140,6 @@ static MKStoreManager* _sharedStoreManager;
 {
 	SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithObjects: 
 								  kFeatureAId,
-								  kConsumableFeatureBId,
 								  nil]];
 	request.delegate = self;
 	[request start];
@@ -272,8 +275,7 @@ static MKStoreManager* _sharedStoreManager;
 		count -= quantity;
 		[[NSUserDefaults standardUserDefaults] setInteger:count forKey:productIdentifier];
 		return YES;
-	}
-	
+	}	
 }
 
 -(void) enableContentForThisSession: (NSString*) productIdentifier
@@ -282,12 +284,49 @@ static MKStoreManager* _sharedStoreManager;
 		[_delegate productPurchased:productIdentifier];
 }
 
-							 
+
+- (NSString*) verifySubscriptionReceipts
+{        
+    NSURL *url = [NSURL URLWithString:kReceiptValidationURL];
+	
+	NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
+                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
+                                                          timeoutInterval:60];
+	
+	[theRequest setHTTPMethod:@"POST"];		
+	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+	
+	NSString *length = [NSString stringWithFormat:@"%d", [self.latestReceiptString length]];	
+	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
+	
+	[theRequest setHTTPBody:[self.latestReceiptString dataUsingEncoding:NSASCIIStringEncoding]];
+	
+	NSHTTPURLResponse* urlResponse = nil;
+	NSError *error = [[[NSError alloc] init] autorelease];  
+	
+	NSData *responseData = [NSURLConnection sendSynchronousRequest:theRequest
+												 returningResponse:&urlResponse 
+															 error:&error];  
+	
+	return [[[NSString alloc] initWithData:responseData encoding:NSASCIIStringEncoding] autorelease];
+}
+			
+
+
 #pragma mark In-App purchases callbacks
 // In most cases you don't have to touch these methods
 -(void) provideContent: (NSString*) productIdentifier 
 		   forReceipt:(NSData*) receiptData
 {
+    if(IAP_SUBSCRIPTIONS_MODEL)
+    {        
+        self.latestReceiptString = [NSString stringWithFormat:@"{\"receipt-data\":\"%@\" \"password\":\"%@\"}", [receiptData base64EncodedString], kSharedSecret];
+        
+        [[NSUserDefaults standardUserDefaults] setObject:self.latestReceiptString forKey:kReceiptStringKey];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    
+    
 	if(ownServer != nil && SERVER_PRODUCT_MODEL)
 	{
 		// ping server and get response before serializing the product
@@ -297,9 +336,13 @@ static MKStoreManager* _sharedStoreManager;
 	}
 
 	NSRange range = [productIdentifier rangeOfString:kConsumableBaseFeatureId];		
-	NSString *countText = [productIdentifier substringFromIndex:range.location+[kConsumableBaseFeatureId length]];
-	
-	int quantityPurchased = [countText intValue];
+    int quantityPurchased = 0;
+    
+    if(range.location != NSNotFound)
+    {
+        NSString *countText = [productIdentifier substringFromIndex:range.location+[kConsumableBaseFeatureId length]];	
+        quantityPurchased = [countText intValue];
+    }
 	if(quantityPurchased != 0)
 	{
 		

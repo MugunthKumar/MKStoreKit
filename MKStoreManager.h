@@ -1,8 +1,9 @@
 //
 //  StoreManager.h
-//  MKStoreKit
+//  MKStoreKit (Version 3.5)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
+//  Version 3.5
 //  Copyright 2010 Steinlogic. All rights reserved.
 //	File created using Singleton XCode Template by Mugunth Kumar (http://mugunthkumar.com
 //  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
@@ -25,12 +26,24 @@
 
 // CONFIGURATION STARTS -- Change this in your app
 #define kConsumableBaseFeatureId @"com.mycompany.myapp."
-#define kFeatureAId @"com.mycompany.myapp.featureA"
+#define kFeatureAId @"com.mugunthkumar.subinapptest.wk1"
 #define kConsumableFeatureBId @"com.mycompany.myapp.005"
+
+#define kSharedSecret @"749a1ca3750a421fa92cf8e139a6f539"
+
+#define kReceiptStringKey @"MK_STOREKIT_RECEIPTS_STRING"
+
+#ifndef NDEBUG
+    #define kReceiptValidationURL @"https://sandbox.itunes.apple.com/verifyReceipt"
+#else
+    #define kReceiptValidationURL @"https://buy.itunes.apple.com/verifyReceipt"
+#endif
+
 // consumable features should have only number as the last part of the product name
 // MKStoreKit automatically keeps track of the count of your consumable product
 
 #define SERVER_PRODUCT_MODEL 0
+#define IAP_SUBSCRIPTIONS_MODEL 1
 // CONFIGURATION ENDS -- Change this in your app
 
 @protocol MKStoreKitDelegate <NSObject>
@@ -48,10 +61,13 @@
 	MKStoreObserver *_storeObserver;
 	
 	BOOL isProductsAvailable;
+    
+    NSString *_latestReceiptString;
 }
 
 @property (nonatomic, retain) NSMutableArray *purchasableObjects;
 @property (nonatomic, retain) MKStoreObserver *storeObserver;
+@property (nonatomic, retain) NSString *latestReceiptString;
 
 // These are the methods you will be using in your app
 + (MKStoreManager*)sharedManager;
@@ -63,6 +79,7 @@
 - (void) buyFeature:(NSString*) featureId;
 - (NSMutableArray*) purchasableObjectsDescription;
 - (void) restorePreviousTransactions;
+- (NSString*) verifySubscriptionReceipts;
 
 - (BOOL) canConsumeProduct:(NSString*) productIdentifier quantity:(int) quantity;
 - (BOOL) consumeProduct:(NSString*) productIdentifier quantity:(int) quantity;

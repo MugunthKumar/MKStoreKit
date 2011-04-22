@@ -1,6 +1,6 @@
 //
 //  MKStoreObserver.h
-//  MKStoreKit
+//  MKStoreKit (Version 3.5)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
 //  Copyright 2010 Steinlogic. All rights reserved.
