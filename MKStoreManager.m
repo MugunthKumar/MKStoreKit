@@ -157,6 +157,10 @@ static MKStoreManager* _sharedStoreManager;
 			  [[product price] doubleValue], [product productIdentifier]);
 	}
 	
+    if ([response.invalidProductIdentifiers count]) {
+        NSLog(@"There were %d invalid products. This problem can be difficult to troubleshoot. See here for suggestions: http://troybrant.net/blog/2010/01/invalid-product-ids/", [response.invalidProductIdentifiers count]);
+    }
+
 	for(NSString *invalidProduct in response.invalidProductIdentifiers)
 		NSLog(@"Problem in iTunes connect configuration for product: %@", invalidProduct);
 #endif
