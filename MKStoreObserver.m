@@ -28,6 +28,8 @@
 
 - (void) provideContent: (NSString*) productIdentifier 
 			forReceipt: (NSData*) recieptData;
+- (void) restoreComplete;
+
 @end
 
 @implementation MKStoreObserver
@@ -82,6 +84,17 @@
 									   forReceipt:transaction.transactionReceipt];
 	
     [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
+}
+
+- (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
+#ifndef NDEBUG
+	NSLog(@"restoreCompletedTransactionsFailedWithError: %@", error);
+#endif
+    [[MKStoreManager sharedManager] restoreComplete];
+}
+
+- (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
+    [[MKStoreManager sharedManager] restoreComplete];
 }
 
 @end

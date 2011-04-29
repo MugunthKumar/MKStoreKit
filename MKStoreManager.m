@@ -384,7 +384,13 @@ static MKStoreManager* _sharedStoreManager;
 	[alert release];
 }
 
-
+- (void) restoreComplete {
+#ifndef NDEBUG
+	NSLog(@"restoreComplete");
+#endif
+    if([_delegate respondsToSelector:@selector(restoreComplete)])
+        [_delegate restoreComplete];
+}
 
 #pragma mark In-App purchases promo codes support
 // This function is only used if you want to enable in-app purchases for free for reviewers
