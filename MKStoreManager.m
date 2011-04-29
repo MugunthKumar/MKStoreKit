@@ -367,6 +367,7 @@ static MKStoreManager* _sharedStoreManager;
 
 #ifndef NDEBUG
 	NSLog(@"User cancelled transaction: %@", [transaction description]);
+    NSLog(@"error: %@", transaction.error);
 #endif
 	
 	if([_delegate respondsToSelector:@selector(transactionCanceled)])
@@ -375,16 +376,28 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void) failedTransaction: (SKPaymentTransaction *)transaction
 {
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[transaction.error localizedFailureReason] 
-													message:[transaction.error localizedRecoverySuggestion]
+#ifndef NDEBUG
+	NSLog(@"Failed transaction: %@", [transaction description]);
+    NSLog(@"error: %@", transaction.error);
+#endif
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Purchase Failed", @"")
+													message:NSLocalizedString(@"Your purchase could not be completed. Please check your network settings and try again later.", @"")
 												   delegate:self 
 										  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
 										  otherButtonTitles: nil];
 	[alert show];
 	[alert release];
+    if([_delegate respondsToSelector:@selector(transactionCanceled)])
+		[_delegate transactionCanceled];
 }
 
-
+- (void) restoreComplete {
+#ifndef NDEBUG
+	NSLog(@"restoreComplete");
+#endif
+    if([_delegate respondsToSelector:@selector(restoreComplete)])
+        [_delegate restoreComplete];
+}
 
 #pragma mark In-App purchases promo codes support
 // This function is only used if you want to enable in-app purchases for free for reviewers
