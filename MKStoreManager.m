@@ -296,6 +296,7 @@ static MKStoreManager* _sharedStoreManager;
 	{
 		count -= quantity;
 		[[NSUserDefaults standardUserDefaults] setInteger:count forKey:productIdentifier];
+        [[NSUserDefaults standardUserDefaults] synchronize];
 		return YES;
 	}	
 }
