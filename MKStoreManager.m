@@ -138,9 +138,8 @@ static MKStoreManager* _sharedStoreManager;
 
 -(void) requestProductData
 {
-	SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithObjects: 
-								  kFeatureAId,
-								  nil]];
+    NSSet* productIdentifiers = [_delegate productIdentifiers];
+	SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
 	request.delegate = self;
 	[request start];
 }
@@ -219,6 +218,25 @@ static MKStoreManager* _sharedStoreManager;
 	return productDescriptions;
 }
 
+- (NSUInteger) consumableQuantityForProductIdentifier:(NSString*)productIdentifier {
+    unichar charBuffer[[productIdentifier length]];
+    [productIdentifier getCharacters:charBuffer];
+    
+    NSUInteger location = [productIdentifier length];
+    for (; location > 0; location--) {
+        if (![[NSCharacterSet decimalDigitCharacterSet] characterIsMember:charBuffer[location - 1]]) {
+            break;
+        }
+    }
+    
+    NSUInteger rangeLength = [productIdentifier length] - location;
+    if (!rangeLength) return 0;
+    
+    NSRange range = NSMakeRange(location, rangeLength);
+    NSString* countString = [productIdentifier substringWithRange:range];
+    return [countString intValue];
+}
+
 
 - (void) buyFeature:(NSString*) featureId
 {
@@ -278,6 +296,7 @@ static MKStoreManager* _sharedStoreManager;
 	{
 		count -= quantity;
 		[[NSUserDefaults standardUserDefaults] setInteger:count forKey:productIdentifier];
+        [[NSUserDefaults standardUserDefaults] synchronize];
 		return YES;
 	}	
 }
@@ -339,14 +358,8 @@ static MKStoreManager* _sharedStoreManager;
 		if(![self verifyReceipt:receiptData]) return;
 	}
 
-	NSRange range = [productIdentifier rangeOfString:kConsumableBaseFeatureId];		
-    int quantityPurchased = 0;
+	NSUInteger quantityPurchased = [self consumableQuantityForProductIdentifier:productIdentifier];
     
-    if(range.location != NSNotFound)
-    {
-        NSString *countText = [productIdentifier substringFromIndex:range.location+[kConsumableBaseFeatureId length]];	
-        quantityPurchased = [countText intValue];
-    }
 	if(quantityPurchased != 0)
 	{
 		

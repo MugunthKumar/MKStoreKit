@@ -25,10 +25,6 @@
 #import "MKStoreObserver.h"
 
 // CONFIGURATION STARTS -- Change this in your app
-#define kConsumableBaseFeatureId @"com.mycompany.myapp."
-#define kFeatureAId @"com.mugunthkumar.subinapptest.wk1"
-#define kConsumableFeatureBId @"com.mycompany.myapp.005"
-
 #define kSharedSecret @"749a1ca3750a421fa92cf8e139a6f539"
 
 #define kReceiptStringKey @"MK_STOREKIT_RECEIPTS_STRING"
@@ -39,14 +35,17 @@
     #define kReceiptValidationURL @"https://buy.itunes.apple.com/verifyReceipt"
 #endif
 
-// consumable features should have only number as the last part of the product name
-// MKStoreKit automatically keeps track of the count of your consumable product
-
 #define SERVER_PRODUCT_MODEL 0
 #define IAP_SUBSCRIPTIONS_MODEL 1
 // CONFIGURATION ENDS -- Change this in your app
 
 @protocol MKStoreKitDelegate <NSObject>
+- (NSSet *) productIdentifiers;
+// consumable features should have only number as the last part of the product name
+// e.g. com.mycompany.myapp.coins.005 to purchase 5 coins
+// If you follow this naming standard, MKStoreKit automatically keeps track of the 
+// count of your consumable product
+
 @optional
 - (void)productFetchComplete;
 - (void)productPurchased:(NSString *)productId;
