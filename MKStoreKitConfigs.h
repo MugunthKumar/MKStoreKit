@@ -30,4 +30,3 @@
 // MKStoreKit automatically keeps track of the count of your consumable product
 
 #define SERVER_PRODUCT_MODEL 0
-#define IAP_SUBSCRIPTIONS_MODEL 1

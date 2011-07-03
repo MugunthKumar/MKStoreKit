@@ -24,6 +24,7 @@
 #import <StoreKit/StoreKit.h>
 #import "MKStoreObserver.h"
 #import "MKStoreKitConfigs.h"
+#import "JSONKit.h"
 
 #define kReceiptStringKey @"MK_STOREKIT_RECEIPTS_STRING"
 
@@ -54,11 +55,12 @@
 - (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
                                        onError:(void (^)(NSError*)) errorBlock;
 
-- (NSString*) verifySubscriptionReceipts;
-
 - (BOOL) canConsumeProduct:(NSString*) productIdentifier quantity:(int) quantity;
 - (BOOL) consumeProduct:(NSString*) productIdentifier quantity:(int) quantity;
+- (BOOL) isSubscriptionActive:(NSString*) featureId;
 
++(void) setObject:(id) object forKey:(NSString*) key;
++(NSNumber*) numberForKey:(NSString*) key;
 -(void) restoreCompleted;
 -(void) restoreFailedWithError:(NSError*) error;
 @end

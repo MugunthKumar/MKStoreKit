@@ -20,8 +20,8 @@
 //	if you are re-publishing after editing, please retain the above copyright notices
 
 #import "MKStoreManager.h"
-#import "NSData+Base64.h"
 #import "SFHFKeychainUtils.h"
+#import "MKSKSubscriptionProduct.h"
 
 @interface MKStoreManager () //private methods and properties
 
@@ -32,24 +32,24 @@
 @property (nonatomic, copy) void (^onRestoreCompleted)();
 
 @property (nonatomic, retain) NSMutableArray *purchasableObjects;
+@property (nonatomic, retain) NSMutableDictionary *subscriptionProducts;
+
 @property (nonatomic, retain) MKStoreObserver *storeObserver;
-@property (nonatomic, retain) NSString *latestReceiptString;
 @property (nonatomic, assign, getter=isProductsAvailable) BOOL isProductsAvailable;
 
 - (void) requestProductData;
 - (BOOL) canCurrentDeviceUseFeature: (NSString*) featureID;
 - (BOOL) verifyReceipt:(NSData*) receiptData;
-- (void) enableContentForThisSession: (NSString*) productIdentifier;
+- (void) startVerifyingSubscriptionReceipts;
 
-+(void) setNumber:(NSNumber*) number forKey:(NSString*) key;
-+(NSNumber*) numberForKey:(NSString*) key;
 @end
 
 @implementation MKStoreManager
 
 @synthesize purchasableObjects = _purchasableObjects;
 @synthesize storeObserver = _storeObserver;
-@synthesize latestReceiptString = _latestReceiptString;
+@synthesize subscriptionProducts;
+
 @synthesize isProductsAvailable;
 
 @synthesize onTransactionCancelled;
@@ -58,15 +58,12 @@
 @synthesize onRestoreCompleted;
 
 static NSString *ownServer = nil;
-
 static MKStoreManager* _sharedStoreManager;
-
 
 - (void)dealloc {
 	    
     [_purchasableObjects release], _purchasableObjects = nil;
     [_storeObserver release], _storeObserver = nil;
-    [_latestReceiptString release], _latestReceiptString = nil;
     [onTransactionCancelled release], onTransactionCancelled = nil;
     [onTransactionCompleted release], onTransactionCompleted = nil;
     [onRestoreFailed release], onRestoreFailed = nil;
@@ -80,11 +77,20 @@ static MKStoreManager* _sharedStoreManager;
 	[super dealloc];
 }
 
-+(void) setNumber:(NSNumber*) number forKey:(NSString*) key
++(void) setObject:(id) object forKey:(NSString*) key
 {
+    NSString *objectString = nil;
+    if([object isKindOfClass:[NSData class]])
+    {
+        objectString = [[[NSString alloc] initWithData:object encoding:NSUTF8StringEncoding] autorelease];
+    }
+    if([object isKindOfClass:[NSNumber class]])
+    {       
+        objectString = [(NSNumber*)object stringValue];
+    }
     NSError *error = nil;
     [SFHFKeychainUtils storeUsername:key 
-                         andPassword:[number stringValue]
+                         andPassword:objectString
                       forServiceName:@"MKStoreKit"
                       updateExisting:YES 
                                error:&error];
@@ -93,16 +99,27 @@ static MKStoreManager* _sharedStoreManager;
         NSLog(@"%@", [error localizedDescription]);
 }
 
-+(NSNumber*) numberForKey:(NSString*) key
++(id) objectForKey:(NSString*) key
 {
     NSError *error = nil;
-    NSString *numberString = [SFHFKeychainUtils getPasswordForUsername:key 
-                                                        andServiceName:@"MKStoreKit" 
-                                                                 error:&error];
+    NSObject *object = [SFHFKeychainUtils getPasswordForUsername:key 
+                                                  andServiceName:@"MKStoreKit" 
+                                                           error:&error];
     if(error)
         NSLog(@"%@", [error localizedDescription]);
     
-    return [NSNumber numberWithInt:[numberString intValue]];
+    return object;
+}
+
++(NSNumber*) numberForKey:(NSString*) key
+{
+    return [NSNumber numberWithInt:[[MKStoreManager objectForKey:key] intValue]];
+}
+
++(NSData*) dataForKey:(NSString*) key
+{
+    NSString *str = [MKStoreManager objectForKey:key];
+    return [str dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 #pragma mark Singleton Methods
@@ -120,9 +137,8 @@ static MKStoreManager* _sharedStoreManager;
 			_sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
 			[_sharedStoreManager requestProductData];						
 			_sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
-            _sharedStoreManager.latestReceiptString = [[NSUserDefaults standardUserDefaults] stringForKey:kReceiptStringKey];
-
-			[[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];			
+			[[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];            
+            [_sharedStoreManager startVerifyingSubscriptionReceipts];
 #endif
         }
     }
@@ -245,6 +261,12 @@ static MKStoreManager* _sharedStoreManager;
     return [[MKStoreManager numberForKey:featureId] boolValue];
 }
 
+- (BOOL) isSubscriptionActive:(NSString*) featureId
+{    
+    MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:featureId];
+    return [subscriptionProduct isSubscriptionActive];
+}
+
 // Call this function to populate your UI
 // this function automatically formats the currency based on the user's locale
 
@@ -293,7 +315,8 @@ static MKStoreManager* _sharedStoreManager;
 		[alert show];
 		[alert release];
 		
-		[self enableContentForThisSession:featureId];
+        if(self.onTransactionCompleted)
+            self.onTransactionCompleted(featureId);
 		return;
 	}
 	
@@ -338,88 +361,90 @@ static MKStoreManager* _sharedStoreManager;
 	else 
 	{
 		count -= quantity;
-        [MKStoreManager setNumber:[NSNumber numberWithInt:count] forKey:productIdentifier];
+        [MKStoreManager setObject:[NSNumber numberWithInt:count] forKey:productIdentifier];
 		return YES;
 	}	
 }
 
--(void) enableContentForThisSession: (NSString*) productIdentifier
+- (void) startVerifyingSubscriptionReceipts
 {
-    if(self.onTransactionCompleted)
-        self.onTransactionCompleted(productIdentifier);
+    NSDictionary *subscriptions = [[NSDictionary dictionaryWithContentsOfFile:
+                     [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:
+                      @"MKStoreKitConfigs.plist"]] objectForKey:@"Subscriptions"];
+    
+    self.subscriptionProducts = [NSMutableDictionary dictionary];
+    for(NSString *productId in [subscriptions allKeys])
+    {
+        MKSKSubscriptionProduct *product = [[[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[subscriptionProducts objectForKey:productId] intValue]] autorelease];        
+        product.receipt = [MKStoreManager dataForKey:productId]; // cached receipt
+        
+        if(product.receipt)
+        {
+            [product verifyReceiptOnComplete:^(NSNumber* isActive)
+             {
+                 if([isActive boolValue] == NO)
+                 {
+                     NSLog(@"Subscription: %@ is inactive", product.productId);
+                 }
+             }
+                                     onError:^(NSError* error)
+             {
+                 
+             }]; 
+        }
+        
+        [self.subscriptionProducts setObject:product forKey:productId];
+    }
 }
-
-
-- (NSString*) verifySubscriptionReceipts
-{        
-    NSURL *url = [NSURL URLWithString:kReceiptValidationURL];
-	
-	NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
-                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
-                                                          timeoutInterval:60];
-	
-	[theRequest setHTTPMethod:@"POST"];		
-	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-	
-	NSString *length = [NSString stringWithFormat:@"%d", [self.latestReceiptString length]];	
-	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
-	
-	[theRequest setHTTPBody:[self.latestReceiptString dataUsingEncoding:NSUTF8StringEncoding]];
-	
-	NSHTTPURLResponse* urlResponse = nil;
-	NSError *error = [[[NSError alloc] init] autorelease];  
-	
-	NSData *responseData = [NSURLConnection sendSynchronousRequest:theRequest
-												 returningResponse:&urlResponse 
-															 error:&error];  
-	
-	return [[[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding] autorelease];
-}
-			
-
 
 #pragma mark In-App purchases callbacks
 // In most cases you don't have to touch these methods
 -(void) provideContent: (NSString*) productIdentifier 
 		   forReceipt:(NSData*) receiptData
 {
-    if(IAP_SUBSCRIPTIONS_MODEL)
-    {        
-        self.latestReceiptString = [NSString stringWithFormat:@"{\"receipt-data\":\"%@\" \"password\":\"%@\"}", [receiptData base64EncodedString], kSharedSecret];
-        
-        [[NSUserDefaults standardUserDefaults] setObject:self.latestReceiptString forKey:kReceiptStringKey];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-    
-    
-	if(ownServer != nil && SERVER_PRODUCT_MODEL)
-	{
-		// ping server and get response before serializing the product
-		// this is a blocking call to post receipt data to your server
-		// it should normally take a couple of seconds on a good 3G connection
-		if(![self verifyReceipt:receiptData]) return;
-	}
-
-	NSRange range = [productIdentifier rangeOfString:kConsumableBaseFeatureId];		
-    int quantityPurchased = 0;
-    
-    if(range.location != NSNotFound)
+    MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
+    if(subscriptionProduct)
+    {                
+        subscriptionProduct.receipt = receiptData;
+        [subscriptionProduct verifyReceiptOnComplete:^(NSNumber* isActive)
+         {
+             [MKStoreManager setObject:receiptData forKey:productIdentifier];             
+         }
+                                             onError:^(NSError* error)
+         {
+             
+         }];
+    }        
+    else
     {
-        NSString *countText = [productIdentifier substringFromIndex:range.location+[kConsumableBaseFeatureId length]];	
-        quantityPurchased = [countText intValue];
+        if(ownServer != nil && SERVER_PRODUCT_MODEL)
+        {
+            // ping server and get response before serializing the product
+            // this is a blocking call to post receipt data to your server
+            // it should normally take a couple of seconds on a good 3G connection
+            if(![self verifyReceipt:receiptData]) return;
+        }
+
+        NSRange range = [productIdentifier rangeOfString:kConsumableBaseFeatureId];		
+        int quantityPurchased = 0;
+        
+        if(range.location != NSNotFound)
+        {
+            NSString *countText = [productIdentifier substringFromIndex:range.location+[kConsumableBaseFeatureId length]];	
+            quantityPurchased = [countText intValue];
+        }
+        if(quantityPurchased != 0)
+        {		
+            int oldCount = [[MKStoreManager numberForKey:productIdentifier] intValue];
+            oldCount += quantityPurchased;	
+            
+            [MKStoreManager setObject:[NSNumber numberWithInt:oldCount] forKey:productIdentifier];		
+        }
+        else 
+        {
+            [MKStoreManager setObject:[NSNumber numberWithBool:YES] forKey:productIdentifier];		
+        }
     }
-	if(quantityPurchased != 0)
-	{
-		
-		int oldCount = [[MKStoreManager numberForKey:productIdentifier] intValue];
-		oldCount += quantityPurchased;	
-		
-        [MKStoreManager setNumber:[NSNumber numberWithInt:oldCount] forKey:productIdentifier];		
-	}
-	else 
-	{
-        [MKStoreManager setNumber:[NSNumber numberWithBool:YES] forKey:productIdentifier];		
-	}
 
     if(self.onTransactionCompleted)
         self.onTransactionCompleted(productIdentifier);
