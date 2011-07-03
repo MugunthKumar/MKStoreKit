@@ -430,6 +430,7 @@ static MKStoreManager* _sharedStoreManager;
 
 #ifndef NDEBUG
 	NSLog(@"User cancelled transaction: %@", [transaction description]);
+    NSLog(@"error: %@", transaction.error);
 #endif
         
     if(self.onTransactionCancelled)
@@ -438,13 +439,22 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void) failedTransaction: (SKPaymentTransaction *)transaction
 {
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[transaction.error localizedFailureReason] 
+    
+#ifndef NDEBUG
+    NSLog(@"Failed transaction: %@", [transaction description]);
+    NSLog(@"error: %@", transaction.error);    
+#endif
+	
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[transaction.error localizedFailureReason] 
 													message:[transaction.error localizedRecoverySuggestion]
 												   delegate:self 
 										  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
 										  otherButtonTitles: nil];
 	[alert show];
 	[alert release];
+    
+    if(self.onTransactionCancelled)
+        self.onTransactionCancelled();
 }
 
 
