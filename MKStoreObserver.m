@@ -1,8 +1,9 @@
 //
 //  MKStoreObserver.m
-//  MKStoreKit (Version 3.5)
+//  MKStoreKit (Version 4.0)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
+//  Version 4.0
 //  Copyright 2010 Steinlogic. All rights reserved.
 //	File created using Singleton XCode Template by Mugunth Kumar (http://mugunthkumar.com
 //  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
@@ -59,6 +60,16 @@
                 break;
 		}			
 	}
+}
+
+- (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
+{
+    [[MKStoreManager sharedManager] restoreFailedWithError:error];    
+}
+
+- (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue 
+{
+    [[MKStoreManager sharedManager] restoreCompleted];
 }
 
 - (void) failedTransaction: (SKPaymentTransaction *)transaction

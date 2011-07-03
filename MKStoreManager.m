@@ -1,8 +1,9 @@
 //
 //  MKStoreManager.m
-//  MKStoreKit (Version 3.5)
+//  MKStoreKit (Version 4.0)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
+//  Version 4.0
 //  Copyright 2010 Steinlogic. All rights reserved.
 //	File created using Singleton XCode Template by Mugunth Kumar (http://mugunthkumar.com
 //  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
@@ -20,14 +21,28 @@
 
 #import "MKStoreManager.h"
 #import "NSData+Base64.h"
+#import "SFHFKeychainUtils.h"
 
-@interface MKStoreManager (PrivateMethods)
+@interface MKStoreManager () //private methods and properties
+
+@property (nonatomic, copy) void (^onTransactionCancelled)();
+@property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId);
+
+@property (nonatomic, copy) void (^onRestoreFailed)(NSError* error);
+@property (nonatomic, copy) void (^onRestoreCompleted)();
+
+@property (nonatomic, retain) NSMutableArray *purchasableObjects;
+@property (nonatomic, retain) MKStoreObserver *storeObserver;
+@property (nonatomic, retain) NSString *latestReceiptString;
+@property (nonatomic, assign, getter=isProductsAvailable) BOOL isProductsAvailable;
 
 - (void) requestProductData;
 - (BOOL) canCurrentDeviceUseFeature: (NSString*) featureID;
 - (BOOL) verifyReceipt:(NSData*) receiptData;
 - (void) enableContentForThisSession: (NSString*) productIdentifier;
 
++(void) setNumber:(NSNumber*) number forKey:(NSString*) key;
++(NSNumber*) numberForKey:(NSString*) key;
 @end
 
 @implementation MKStoreManager
@@ -35,32 +50,59 @@
 @synthesize purchasableObjects = _purchasableObjects;
 @synthesize storeObserver = _storeObserver;
 @synthesize latestReceiptString = _latestReceiptString;
+@synthesize isProductsAvailable;
+
+@synthesize onTransactionCancelled;
+@synthesize onTransactionCompleted;
+@synthesize onRestoreFailed;
+@synthesize onRestoreCompleted;
 
 static NSString *ownServer = nil;
 
-static __weak id<MKStoreKitDelegate> _delegate;
 static MKStoreManager* _sharedStoreManager;
 
 
 - (void)dealloc {
-	
-	[_purchasableObjects release];
-	[_storeObserver release];
+	    
+    [_purchasableObjects release], _purchasableObjects = nil;
+    [_storeObserver release], _storeObserver = nil;
+    [_latestReceiptString release], _latestReceiptString = nil;
+    [onTransactionCancelled release], onTransactionCancelled = nil;
+    [onTransactionCompleted release], onTransactionCompleted = nil;
+    [onRestoreFailed release], onRestoreFailed = nil;
+    [onRestoreCompleted release], onRestoreCompleted = nil;    
+    [super dealloc];
+}
 
-	[_sharedStoreManager release];
++ (void) dealloc
+{
+	[_sharedStoreManager release], _sharedStoreManager = nil;
 	[super dealloc];
 }
 
-#pragma mark Delegates
-
-+ (id)delegate {
-	
-    return _delegate;
++(void) setNumber:(NSNumber*) number forKey:(NSString*) key
+{
+    NSError *error = nil;
+    [SFHFKeychainUtils storeUsername:key 
+                         andPassword:[number stringValue]
+                      forServiceName:@"MKStoreKit"
+                      updateExisting:YES 
+                               error:&error];
+    
+    if(error)
+        NSLog(@"%@", [error localizedDescription]);
 }
 
-+ (void)setDelegate:(id)newDelegate {
-	
-    _delegate = newDelegate;	
++(NSNumber*) numberForKey:(NSString*) key
+{
+    NSError *error = nil;
+    NSString *numberString = [SFHFKeychainUtils getPasswordForUsername:key 
+                                                        andServiceName:@"MKStoreKit" 
+                                                                 error:&error];
+    if(error)
+        NSLog(@"%@", [error localizedDescription]);
+    
+    return [NSNumber numberWithInt:[numberString intValue]];
 }
 
 #pragma mark Singleton Methods
@@ -87,7 +129,6 @@ static MKStoreManager* _sharedStoreManager;
     return _sharedStoreManager;
 }
 
-
 + (id)allocWithZone:(NSZone *)zone
 
 {	
@@ -109,6 +150,8 @@ static MKStoreManager* _sharedStoreManager;
     return self;	
 }
 
+#if __has_feature (objc_arc)
+
 - (id)retain
 {	
     return self;	
@@ -128,12 +171,31 @@ static MKStoreManager* _sharedStoreManager;
 {
     return self;	
 }
+#endif
 
 #pragma mark Internal MKStoreKit functions
 
-- (void) restorePreviousTransactions
+- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
+                                       onError:(void (^)(NSError*)) errorBlock
 {
+    self.onRestoreCompleted = completionBlock;
+    self.onRestoreFailed = errorBlock;
+    
 	[[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
+}
+
+-(void) restoreCompleted
+{
+    if(self.onRestoreCompleted)
+        self.onRestoreCompleted();
+    self.onRestoreCompleted = nil;
+}
+
+-(void) restoreFailedWithError:(NSError*) error
+{
+    if(self.onRestoreFailed)
+        self.onRestoreFailed(error);
+    self.onRestoreFailed = nil;
 }
 
 -(void) requestProductData
@@ -163,26 +225,24 @@ static MKStoreManager* _sharedStoreManager;
 	
 	[request autorelease];
 	
-	isProductsAvailable = YES;
-	
-	if([_delegate respondsToSelector:@selector(productFetchComplete)])
-		[_delegate productFetchComplete];	
+	isProductsAvailable = YES;    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kProductFetchedNotification 
+                                                        object:[NSNumber numberWithBool:isProductsAvailable]];
 }
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
 	[request autorelease];
 	
-	isProductsAvailable = NO;
-	
-	if([_delegate respondsToSelector:@selector(productFetchComplete)])
-		[_delegate productFetchComplete];	
+	isProductsAvailable = NO;	
+    [[NSNotificationCenter defaultCenter] postNotificationName:kProductFetchedNotification 
+                                                        object:[NSNumber numberWithBool:isProductsAvailable]];
 }
 
 // call this function to check if the user has already purchased your feature
 + (BOOL) isFeaturePurchased:(NSString*) featureId
-{
-	return [[NSUserDefaults standardUserDefaults] boolForKey:featureId];
+{    
+    return [[MKStoreManager numberForKey:featureId] boolValue];
 }
 
 // Call this function to populate your UI
@@ -217,7 +277,12 @@ static MKStoreManager* _sharedStoreManager;
 
 
 - (void) buyFeature:(NSString*) featureId
+         onComplete:(void (^)(NSString*)) completionBlock         
+        onCancelled:(void (^)(void)) cancelBlock
 {
+    self.onTransactionCompleted = completionBlock;
+    self.onTransactionCancelled = cancelBlock;
+    
 	if([self canCurrentDeviceUseFeature: featureId])
 	{
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Review request approved", @"")
@@ -251,7 +316,7 @@ static MKStoreManager* _sharedStoreManager;
 
 - (BOOL) canConsumeProduct:(NSString*) productIdentifier
 {
-	int count = [[NSUserDefaults standardUserDefaults] integerForKey:productIdentifier];
+	int count = [[MKStoreManager numberForKey:productIdentifier] intValue];
 	
 	return (count > 0);
 	
@@ -259,13 +324,13 @@ static MKStoreManager* _sharedStoreManager;
 
 - (BOOL) canConsumeProduct:(NSString*) productIdentifier quantity:(int) quantity
 {
-	int count = [[NSUserDefaults standardUserDefaults] integerForKey:productIdentifier];
+	int count = [[MKStoreManager numberForKey:productIdentifier] intValue];
 	return (count >= quantity);
 }
 
 - (BOOL) consumeProduct:(NSString*) productIdentifier quantity:(int) quantity
 {
-	int count = [[NSUserDefaults standardUserDefaults] integerForKey:productIdentifier];
+	int count = [[MKStoreManager numberForKey:productIdentifier] intValue];
 	if(count < quantity)
 	{
 		return NO;
@@ -273,15 +338,15 @@ static MKStoreManager* _sharedStoreManager;
 	else 
 	{
 		count -= quantity;
-		[[NSUserDefaults standardUserDefaults] setInteger:count forKey:productIdentifier];
+        [MKStoreManager setNumber:[NSNumber numberWithInt:count] forKey:productIdentifier];
 		return YES;
 	}	
 }
 
 -(void) enableContentForThisSession: (NSString*) productIdentifier
 {
-	if([_delegate respondsToSelector:@selector(productPurchased:)])
-		[_delegate productPurchased:productIdentifier];
+    if(self.onTransactionCompleted)
+        self.onTransactionCompleted(productIdentifier);
 }
 
 
@@ -299,7 +364,7 @@ static MKStoreManager* _sharedStoreManager;
 	NSString *length = [NSString stringWithFormat:@"%d", [self.latestReceiptString length]];	
 	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
 	
-	[theRequest setHTTPBody:[self.latestReceiptString dataUsingEncoding:NSASCIIStringEncoding]];
+	[theRequest setHTTPBody:[self.latestReceiptString dataUsingEncoding:NSUTF8StringEncoding]];
 	
 	NSHTTPURLResponse* urlResponse = nil;
 	NSError *error = [[[NSError alloc] init] autorelease];  
@@ -308,7 +373,7 @@ static MKStoreManager* _sharedStoreManager;
 												 returningResponse:&urlResponse 
 															 error:&error];  
 	
-	return [[[NSString alloc] initWithData:responseData encoding:NSASCIIStringEncoding] autorelease];
+	return [[[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding] autorelease];
 }
 			
 
@@ -346,20 +411,18 @@ static MKStoreManager* _sharedStoreManager;
 	if(quantityPurchased != 0)
 	{
 		
-		int oldCount = [[NSUserDefaults standardUserDefaults] integerForKey:productIdentifier];
+		int oldCount = [[MKStoreManager numberForKey:productIdentifier] intValue];
 		oldCount += quantityPurchased;	
 		
-		[[NSUserDefaults standardUserDefaults] setInteger:oldCount forKey:productIdentifier];		
+        [MKStoreManager setNumber:[NSNumber numberWithInt:oldCount] forKey:productIdentifier];		
 	}
 	else 
 	{
-		[[NSUserDefaults standardUserDefaults] setBool:YES forKey:productIdentifier];		
+        [MKStoreManager setNumber:[NSNumber numberWithBool:YES] forKey:productIdentifier];		
 	}
 
-	[[NSUserDefaults standardUserDefaults] synchronize];
-
-	if([_delegate respondsToSelector:@selector(productPurchased:)])
-		[_delegate productPurchased:productIdentifier];	
+    if(self.onTransactionCompleted)
+        self.onTransactionCompleted(productIdentifier);
 }
 
 - (void) transactionCanceled: (SKPaymentTransaction *)transaction
@@ -368,9 +431,9 @@ static MKStoreManager* _sharedStoreManager;
 #ifndef NDEBUG
 	NSLog(@"User cancelled transaction: %@", [transaction description]);
 #endif
-	
-	if([_delegate respondsToSelector:@selector(transactionCanceled)])
-		[_delegate transactionCanceled];
+        
+    if(self.onTransactionCancelled)
+        self.onTransactionCancelled();
 }
 
 - (void) failedTransaction: (SKPaymentTransaction *)transaction
