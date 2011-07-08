@@ -2,15 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>Consumables</key>
+	<dict>
+		<key>com.mugunthkumar.inappsubtest.consumable1</key>
+		<dict>
+			<key>Count</key>
+			<integer>500</integer>
+			<key>Name</key>
+			<string>EggBasket</string>
+		</dict>
+	</dict>
+	<key>Non-Consumables</key>
+	<array>
+		<string>com.mugunthkumar.inappsubtest.nonconsumable</string>
+	</array>
 	<key>Subscriptions</key>
 	<dict>
 		<key>com.mugunthkumar.subinapptest.wk1</key>
 		<integer>7</integer>
-	</dict>
-	<key>Consumables</key>
-	<dict>
-		<key>com.mugunthkumar.subinapptest.product1</key>
-		<integer>500</integer>
 	</dict>
 </dict>
 </plist>

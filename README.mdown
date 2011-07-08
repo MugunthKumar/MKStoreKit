@@ -19,7 +19,10 @@ To purchase a feature, just call
      NSLog(@"User Cancelled Transaction");
  }];
 
-It’s that simple with my MKStoreKit. As always, all my source code can be used royalty-free into your app. Just make sure that you don’t remove the copyright notice from the source code if you make your app open source. You don’t have to attribute me in your app, although I would be glad if you do so.
+It’s that simple with my MKStoreKit. 
+
+MKStoreKit uses zLib licensing
+And so all of my source code can be used royalty-free into your app. Just make sure that you don’t remove the copyright notice from the source code if you make your app open source. You don’t have to attribute me in your app, although I would be glad if you do so.
 
 What's new in Version 4
 MKStoreKitDelegate removed in favour of Blocks

@@ -9,19 +9,34 @@
 //  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
 //  Read my blog post at http://mk.sg/1m on how to use this code
 
+//  Licensing (Zlib)
+//  This software is provided 'as-is', without any express or implied
+//  warranty.  In no event will the authors be held liable for any damages
+//  arising from the use of this software.
+//
+//  Permission is granted to anyone to use this software for any purpose,
+//  including commercial applications, and to alter it and redistribute it
+//  freely, subject to the following restrictions:
+//
+//  1. The origin of this software must not be misrepresented; you must not
+//  claim that you wrote the original software. If you use this software
+//  in a product, an acknowledgment in the product documentation would be
+//  appreciated but is not required.
+//  2. Altered source versions must be plainly marked as such, and must not be
+//  misrepresented as being the original software.
+//  3. This notice may not be removed or altered from any source distribution.
+
 //  As a side note on using this code, you might consider giving some credit to me by
 //	1) linking my website from your app's website 
 //	2) or crediting me inside the app's credits page 
 //	3) or a tweet mentioning @mugunthkumar
 //	4) A paypal donation to mugunth.kumar@gmail.com
-//
-//  A note on redistribution
-//	While I'm ok with modifications to this source code, 
-//	if you are re-publishing after editing, please retain the above copyright notices
+
 
 #import "MKStoreManager.h"
 #import "SFHFKeychainUtils.h"
 #import "MKSKSubscriptionProduct.h"
+#import "MKSKProduct.h"
 
 @interface MKStoreManager () //private methods and properties
 
@@ -38,10 +53,9 @@
 @property (nonatomic, assign, getter=isProductsAvailable) BOOL isProductsAvailable;
 
 - (void) requestProductData;
-- (BOOL) canCurrentDeviceUseFeature: (NSString*) featureID;
-- (BOOL) verifyReceipt:(NSData*) receiptData;
 - (void) startVerifyingSubscriptionReceipts;
-
+-(void) rememberPurchaseOfProduct:(NSString*) productIdentifier;
+-(void) addToQueue:(NSString*) productId;
 @end
 
 @implementation MKStoreManager
@@ -57,11 +71,10 @@
 @synthesize onRestoreFailed;
 @synthesize onRestoreCompleted;
 
-static NSString *ownServer = nil;
 static MKStoreManager* _sharedStoreManager;
 
 - (void)dealloc {
-	    
+    
     [_purchasableObjects release], _purchasableObjects = nil;
     [_storeObserver release], _storeObserver = nil;
     [onTransactionCancelled release], onTransactionCancelled = nil;
@@ -129,7 +142,7 @@ static MKStoreManager* _sharedStoreManager;
 	@synchronized(self) {
 		
         if (_sharedStoreManager == nil) {
-						
+            
 #if TARGET_IPHONE_SIMULATOR
 			NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
 #else
@@ -191,6 +204,13 @@ static MKStoreManager* _sharedStoreManager;
 
 #pragma mark Internal MKStoreKit functions
 
+-(NSDictionary*) storeKitItems
+{
+    return [NSDictionary dictionaryWithContentsOfFile:
+            [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:
+             @"MKStoreKitConfigs.plist"]];
+}
+
 - (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
                                        onError:(void (^)(NSError*)) errorBlock
 {
@@ -216,12 +236,20 @@ static MKStoreManager* _sharedStoreManager;
 
 -(void) requestProductData
 {
-	SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithObjects: 
-								  kFeatureAId,
-								  nil]];
+    NSMutableArray *productsArray = [NSMutableArray array];
+    NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
+    NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
+    NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
+    
+    [productsArray addObjectsFromArray:consumables];
+    [productsArray addObjectsFromArray:nonConsumables];
+    [productsArray addObjectsFromArray:subscriptions];
+    
+	SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
 	request.delegate = self;
 	[request start];
 }
+
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
 {
@@ -305,24 +333,40 @@ static MKStoreManager* _sharedStoreManager;
     self.onTransactionCompleted = completionBlock;
     self.onTransactionCancelled = cancelBlock;
     
-	if([self canCurrentDeviceUseFeature: featureId])
+    [MKSKProduct verifyProductForReviewAccess:featureId                                                              
+                                   onComplete:^(NSNumber * isAllowed)
+     {
+         if([isAllowed boolValue])
+         {
+             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Review request approved", @"")
+                                                             message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")
+                                                            delegate:self 
+                                                   cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
+                                                   otherButtonTitles:nil];
+             [alert show];
+             [alert release];
+             
+             if(self.onTransactionCompleted)
+                 self.onTransactionCompleted(featureId);                                         
+         }
+         else
+         {
+             [self addToQueue:featureId];
+         }
+         
+     }                                                                   
+                                      onError:^(NSError* error)
+     {
+         NSLog(@"Review request cannot be checked now: %@", [error description]);
+         [self addToQueue:featureId];
+     }];    
+}
+
+-(void) addToQueue:(NSString*) productId
+{
+    if ([SKPaymentQueue canMakePayments])
 	{
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Review request approved", @"")
-														message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")
-													   delegate:self 
-											  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-											  otherButtonTitles:nil];
-		[alert show];
-		[alert release];
-		
-        if(self.onTransactionCompleted)
-            self.onTransactionCompleted(featureId);
-		return;
-	}
-	
-	if ([SKPaymentQueue canMakePayments])
-	{
-		SKPayment *payment = [SKPayment paymentWithProductIdentifier:featureId];
+		SKPayment *payment = [SKPayment paymentWithProductIdentifier:productId];
 		[[SKPaymentQueue defaultQueue] addPayment:payment];
 	}
 	else
@@ -368,9 +412,7 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void) startVerifyingSubscriptionReceipts
 {
-    NSDictionary *subscriptions = [[NSDictionary dictionaryWithContentsOfFile:
-                     [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:
-                      @"MKStoreKitConfigs.plist"]] objectForKey:@"Subscriptions"];
+    NSDictionary *subscriptions = [[self storeKitItems] objectForKey:@"Subscriptions"];
     
     self.subscriptionProducts = [NSMutableDictionary dictionary];
     for(NSString *productId in [subscriptions allKeys])
@@ -400,7 +442,7 @@ static MKStoreManager* _sharedStoreManager;
 #pragma mark In-App purchases callbacks
 // In most cases you don't have to touch these methods
 -(void) provideContent: (NSString*) productIdentifier 
-		   forReceipt:(NSData*) receiptData
+            forReceipt:(NSData*) receiptData
 {
     MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
     if(subscriptionProduct)
@@ -412,52 +454,72 @@ static MKStoreManager* _sharedStoreManager;
          }
                                              onError:^(NSError* error)
          {
-             
+             NSLog(@"%@", [error description]);
          }];
     }        
     else
     {
-        if(ownServer != nil && SERVER_PRODUCT_MODEL)
+        if(OWN_SERVER && SERVER_PRODUCT_MODEL)
         {
             // ping server and get response before serializing the product
             // this is a blocking call to post receipt data to your server
             // it should normally take a couple of seconds on a good 3G connection
-            if(![self verifyReceipt:receiptData]) return;
-        }
-
-        NSRange range = [productIdentifier rangeOfString:kConsumableBaseFeatureId];		
-        int quantityPurchased = 0;
-        
-        if(range.location != NSNotFound)
-        {
-            NSString *countText = [productIdentifier substringFromIndex:range.location+[kConsumableBaseFeatureId length]];	
-            quantityPurchased = [countText intValue];
-        }
-        if(quantityPurchased != 0)
-        {		
-            int oldCount = [[MKStoreManager numberForKey:productIdentifier] intValue];
-            oldCount += quantityPurchased;	
+            MKSKProduct *thisProduct = [[[MKSKProduct alloc] initWithProductId:productIdentifier receiptData:receiptData] autorelease];
             
-            [MKStoreManager setObject:[NSNumber numberWithInt:oldCount] forKey:productIdentifier];		
+            [thisProduct verifyReceiptOnComplete:^
+             {
+                 [self rememberPurchaseOfProduct:productIdentifier];
+             }
+                                         onError:^(NSError* error)
+             {
+                 if(self.onTransactionCancelled)
+                 {
+                     self.onTransactionCancelled(productIdentifier);
+                 }
+                 else
+                 {
+                     NSLog(@"The receipt could not be verified");
+                 }
+             }];            
         }
-        else 
+        else
         {
-            [MKStoreManager setObject:[NSNumber numberWithBool:YES] forKey:productIdentifier];		
-        }
+            [self rememberPurchaseOfProduct:productIdentifier];
+            if(self.onTransactionCompleted)
+                self.onTransactionCompleted(productIdentifier);
+        }                
     }
+}
 
-    if(self.onTransactionCompleted)
-        self.onTransactionCompleted(productIdentifier);
+
+-(void) rememberPurchaseOfProduct:(NSString*) productIdentifier
+{
+    NSDictionary *allConsumables = [[self storeKitItems] objectForKey:@"Consumables"];
+    if([[allConsumables allKeys] containsObject:productIdentifier])
+    {
+        NSDictionary *thisConsumableDict = [allConsumables objectForKey:productIdentifier];
+        int quantityPurchased = [[thisConsumableDict objectForKey:@"Count"] intValue];
+        NSString* productPurchased = [thisConsumableDict objectForKey:@"Name"];
+        
+        int oldCount = [[MKStoreManager numberForKey:productPurchased] intValue];
+        int newCount = oldCount + quantityPurchased;	
+        
+        [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productIdentifier];        
+    }
+    else
+    {
+        [MKStoreManager setObject:[NSNumber numberWithBool:YES] forKey:productIdentifier];	
+    }
 }
 
 - (void) transactionCanceled: (SKPaymentTransaction *)transaction
 {
-
+    
 #ifndef NDEBUG
 	NSLog(@"User cancelled transaction: %@", [transaction description]);
     NSLog(@"error: %@", transaction.error);
 #endif
-        
+    
     if(self.onTransactionCancelled)
         self.onTransactionCancelled();
 }
@@ -482,94 +544,4 @@ static MKStoreManager* _sharedStoreManager;
         self.onTransactionCancelled();
 }
 
-
-
-#pragma mark In-App purchases promo codes support
-// This function is only used if you want to enable in-app purchases for free for reviewers
-// Read my blog post http://mk.sg/31
-- (BOOL) canCurrentDeviceUseFeature: (NSString*) featureID
-{
-	NSString *uniqueID = [[UIDevice currentDevice] uniqueIdentifier];
-	// check udid and featureid with developer's server
-	
-	if(ownServer == nil) return NO; // sanity check
-	
-	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", ownServer, @"featureCheck.php"]];
-	
-	NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
-                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
-                                                          timeoutInterval:60];
-	
-	[theRequest setHTTPMethod:@"POST"];		
-	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-	
-	NSString *postData = [NSString stringWithFormat:@"productid=%@&udid=%@", featureID, uniqueID];
-	
-	NSString *length = [NSString stringWithFormat:@"%d", [postData length]];	
-	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
-	
-	[theRequest setHTTPBody:[postData dataUsingEncoding:NSASCIIStringEncoding]];
-	
-	NSHTTPURLResponse* urlResponse = nil;
-	NSError *error = [[[NSError alloc] init] autorelease];  
-	
-	NSData *responseData = [NSURLConnection sendSynchronousRequest:theRequest
-												 returningResponse:&urlResponse 
-															 error:&error];  
-	
-	NSString *responseString = [[NSString alloc] initWithData:responseData encoding:NSASCIIStringEncoding];
-	
-	BOOL retVal = NO;
-	if([responseString isEqualToString:@"YES"])		
-	{
-		retVal = YES;
-	}
-	
-	[responseString release];
-	return retVal;
-}
-
-// This function is only used if you want to enable in-app purchases for free for reviewers
-// Read my blog post http://mk.sg/
-
--(BOOL) verifyReceipt:(NSData*) receiptData
-{
-	if(ownServer == nil) return NO; // sanity check
-	
-	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", ownServer, @"verifyProduct.php"]];
-	
-	NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
-                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
-                                                          timeoutInterval:60];
-	
-	[theRequest setHTTPMethod:@"POST"];		
-	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-	
-	NSString *receiptDataString = [[NSString alloc] initWithData:receiptData encoding:NSASCIIStringEncoding];
-	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", receiptDataString];
-	[receiptDataString release];
-	
-	NSString *length = [NSString stringWithFormat:@"%d", [postData length]];	
-	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
-	
-	[theRequest setHTTPBody:[postData dataUsingEncoding:NSASCIIStringEncoding]];
-	
-	NSHTTPURLResponse* urlResponse = nil;
-	NSError *error = [[[NSError alloc] init] autorelease];  
-	
-	NSData *responseData = [NSURLConnection sendSynchronousRequest:theRequest
-												 returningResponse:&urlResponse 
-															 error:&error];  
-	
-	NSString *responseString = [[NSString alloc] initWithData:responseData encoding:NSASCIIStringEncoding];
-	
-	BOOL retVal = NO;
-	if([responseString isEqualToString:@"YES"])		
-	{
-		retVal = YES;
-	}
-	
-	[responseString release];
-	return retVal;
-}
 @end

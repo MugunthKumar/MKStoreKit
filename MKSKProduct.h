@@ -1,9 +1,9 @@
 //
-//  MKSKSubscriptionProduct.h
+//  MKSKProduct.h
 //  MKStoreKitDemo
 //  Version 4.0
 //
-//  Created by Mugunth on 03/07/11.
+//  Created by Mugunth on 04/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
 
 //  Licensing (Zlib)
@@ -31,24 +31,25 @@
 
 
 #import <Foundation/Foundation.h>
-#import <StoreKit/StoreKit.h>
-#import "MKStoreManager.h"
+#import "MKStoreKitConfigs.h"
 
-@interface MKSKSubscriptionProduct : NSObject
+@interface MKSKProduct : NSObject 
 
-@property (nonatomic, copy) void (^onSubscriptionVerificationFailed)();
-@property (nonatomic, copy) void (^onSubscriptionVerificationCompleted)(NSNumber* isActive);
+@property (nonatomic, copy) void (^onReceiptVerificationSucceeded)();
+@property (nonatomic, copy) void (^onReceiptVerificationFailed)();
+
 @property (nonatomic, retain) NSData *receipt;
-@property (nonatomic, retain) NSDictionary *verifiedReceiptDictionary;
-@property (nonatomic, assign) int subscriptionDays; 
+
 @property (nonatomic, retain) NSString *productId;
 @property (nonatomic, retain) NSURLConnection *theConnection;
 @property (nonatomic, retain) NSMutableData *dataFromConnection;
 
-
-- (void) verifyReceiptOnComplete:(void (^)(NSNumber*)) completionBlock
+- (void) verifyReceiptOnComplete:(void (^)(void)) completionBlock
                          onError:(void (^)(NSError*)) errorBlock;
 
--(BOOL) isSubscriptionActive;
--(id) initWithProductId:(NSString*) productId subscriptionDays:(int) days;
+-(id) initWithProductId:(NSString*) aProductId receiptData:(NSData*) aReceipt;
+
++(void) verifyProductForReviewAccess:(NSString*) productId
+                          onComplete:(void (^)(NSNumber*)) completionBlock
+                             onError:(void (^)(NSError*)) errorBlock;
 @end
