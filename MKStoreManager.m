@@ -417,7 +417,7 @@ static MKStoreManager* _sharedStoreManager;
     self.subscriptionProducts = [NSMutableDictionary dictionary];
     for(NSString *productId in [subscriptions allKeys])
     {
-        MKSKSubscriptionProduct *product = [[[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[subscriptionProducts objectForKey:productId] intValue]] autorelease];        
+        MKSKSubscriptionProduct *product = [[[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[subscriptions objectForKey:productId] intValue]] autorelease];        
         product.receipt = [MKStoreManager dataForKey:productId]; // cached receipt
         
         if(product.receipt)
@@ -426,12 +426,19 @@ static MKStoreManager* _sharedStoreManager;
              {
                  if([isActive boolValue] == NO)
                  {
+                     [[NSNotificationCenter defaultCenter] postNotificationName:kSubscriptionsInvalidNotification 
+                                                                         object:product.productId];
+                     
                      NSLog(@"Subscription: %@ is inactive", product.productId);
+                 }
+                 else
+                 {
+                     NSLog(@"Subscription: %@ is active", product.productId);                     
                  }
              }
                                      onError:^(NSError* error)
              {
-                 
+                 NSLog(@"Unable to check for subscription validity right now");                                      
              }]; 
         }
         
@@ -450,6 +457,9 @@ static MKStoreManager* _sharedStoreManager;
         subscriptionProduct.receipt = receiptData;
         [subscriptionProduct verifyReceiptOnComplete:^(NSNumber* isActive)
          {
+             [[NSNotificationCenter defaultCenter] postNotificationName:kSubscriptionsPurchasedNotification 
+                                                                 object:productIdentifier];
+
              [MKStoreManager setObject:receiptData forKey:productIdentifier];             
          }
                                              onError:^(NSError* error)
