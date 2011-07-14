@@ -249,7 +249,30 @@ static MKStoreManager* _sharedStoreManager;
 	request.delegate = self;
 	[request start];
 }
-
+- (BOOL) removeAllKeychainData {
+    NSMutableArray *productsArray = [NSMutableArray array];
+    NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
+    NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
+    NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
+    
+    [productsArray addObjectsFromArray:consumables];
+    [productsArray addObjectsFromArray:nonConsumables];
+    [productsArray addObjectsFromArray:subscriptions];
+    
+    int itemCount = productsArray.count;
+    NSError *error;
+    
+    //loop through all the saved keychain data and remove it    
+    for (int i = 0; i < itemCount; i++ ) {
+        [SFHFKeychainUtils deleteItemForUsername:[productsArray objectAtIndex:i] andServiceName:@"MKStoreKit" error:&error];
+    }
+    if (!error) {
+        return YES; 
+    }
+    else {
+        return NO;
+    }
+}
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
 {
