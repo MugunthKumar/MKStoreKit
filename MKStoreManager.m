@@ -354,11 +354,7 @@ For example,
  
 NSDictionary *prices = [[MKStoreManager sharedManager] pricesDictionary];
 
-<<<<<<< HEAD
 NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
-=======
-NSString *upgradePrice = [dict objectForKey:@"com.mycompany.upgrade"]
->>>>>>> b8a45164a8b5a0e492bfdfe59e3515cc3b952cf4
 
 */
 - (NSMutableDictionary *)pricesDictionary {
