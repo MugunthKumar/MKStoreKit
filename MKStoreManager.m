@@ -348,6 +348,34 @@ static MKStoreManager* _sharedStoreManager;
 	return productDescriptions;
 }
 
+/*Call this function to get a dictionary with all prices of all your product identifers 
+
+For example, 
+ 
+NSDictionary *prices = [[MKStoreManager sharedManager] pricesDictionary];
+
+NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
+
+*/
+- (NSMutableDictionary *)pricesDictionary {
+    NSMutableDictionary *priceDict = [NSMutableDictionary dictionary];
+	for(int i=0;i<[self.purchasableObjects count];i++)
+	{
+		SKProduct *product = [self.purchasableObjects objectAtIndex:i];
+		
+		NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+		[numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+		[numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+		[numberFormatter setLocale:product.priceLocale];
+		NSString *formattedString = [numberFormatter stringFromNumber:product.price];
+		[numberFormatter release];
+        
+        NSString *priceString = [NSString stringWithFormat:@"%@", formattedString];
+        [priceDict setObject:priceString forKey:product.productIdentifier]; 
+        
+    }
+    return priceDict;
+}
 
 - (void) buyFeature:(NSString*) featureId
          onComplete:(void (^)(NSString*)) completionBlock         
