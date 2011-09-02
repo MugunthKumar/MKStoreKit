@@ -83,6 +83,8 @@
 -(BOOL) isSubscriptionActive
 {
     NSString *purchasedDateString = [[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"purchase_date"];
+    if(!purchasedDateString) return NO;
+    
     NSDateFormatter *df = [[NSDateFormatter alloc] init];
 
     //2011-07-03 05:31:55 Etc/GMT
