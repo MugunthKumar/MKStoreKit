@@ -72,7 +72,22 @@ static NSMutableData *sDataFromConnection;
         [onReviewRequestVerificationFailed release];
         onReviewRequestVerificationFailed = [errorBlock copy];
 
-     	NSString *uniqueID = [[UIDevice currentDevice] uniqueIdentifier];
+     	UIDevice *dev = [UIDevice currentDevice];
+	NSString *uniqueID;
+	if ([dev respondsToSelector:@selector(uniqueIdentifier)])
+		uniqueID = dev.uniqueIdentifier;
+	else {
+		NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+		id uuid = [defaults objectForKey:@"uniqueID"];
+		if (uuid)
+			uniqueID = (NSString *)uuid;
+		else {
+			CFStringRef cfUuid = CFUUIDCreateString(NULL, CFUUIDCreate(NULL))
+			uniqueID = (NSString *)cfUuid;
+			CFRelease(cfUuid);
+			[defaults setObject:uniqueID forKey:@"uniqueID"];
+		}
+	}
         // check udid and featureid with developer's server
 		
         NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", OWN_SERVER, @"featureCheck.php"]];
