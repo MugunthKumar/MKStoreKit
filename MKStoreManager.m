@@ -46,10 +46,10 @@
 @property (nonatomic, copy) void (^onRestoreFailed)(NSError* error);
 @property (nonatomic, copy) void (^onRestoreCompleted)();
 
-@property (nonatomic, retain) NSMutableArray *purchasableObjects;
-@property (nonatomic, retain) NSMutableDictionary *subscriptionProducts;
+@property (nonatomic, strong) NSMutableArray *purchasableObjects;
+@property (nonatomic, strong) NSMutableDictionary *subscriptionProducts;
 
-@property (nonatomic, retain) MKStoreObserver *storeObserver;
+@property (nonatomic, strong) MKStoreObserver *storeObserver;
 @property (nonatomic, assign, getter=isProductsAvailable) BOOL isProductsAvailable;
 
 - (void) requestProductData;
@@ -109,18 +109,17 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void)dealloc {
     
-    [_purchasableObjects release], _purchasableObjects = nil;
-    [_storeObserver release], _storeObserver = nil;
-    [onTransactionCancelled release], onTransactionCancelled = nil;
-    [onTransactionCompleted release], onTransactionCompleted = nil;
-    [onRestoreFailed release], onRestoreFailed = nil;
-    [onRestoreCompleted release], onRestoreCompleted = nil;    
-    [super dealloc];
+    _purchasableObjects = nil;
+    _storeObserver = nil;
+    onTransactionCancelled = nil;
+    onTransactionCompleted = nil;
+    onRestoreFailed = nil;
+    onRestoreCompleted = nil;    
 }
 
 + (void) dealloc
 {
-	[_sharedStoreManager release], _sharedStoreManager = nil;
+	_sharedStoreManager = nil;
 	[super dealloc];
 }
 
@@ -129,7 +128,7 @@ static MKStoreManager* _sharedStoreManager;
     NSString *objectString = nil;
     if([object isKindOfClass:[NSData class]])
     {
-        objectString = [[[NSString alloc] initWithData:object encoding:NSUTF8StringEncoding] autorelease];
+        objectString = [[NSString alloc] initWithData:object encoding:NSUTF8StringEncoding];
     }
     if([object isKindOfClass:[NSNumber class]])
     {       
@@ -215,29 +214,6 @@ static MKStoreManager* _sharedStoreManager;
 {
     return self;	
 }
-
-#if __has_feature (objc_arc)
-
-- (id)retain
-{	
-    return self;	
-}
-
-- (unsigned)retainCount
-{
-    return UINT_MAX;  //denotes an object that cannot be released
-}
-
-- (void)release
-{
-    //do nothing
-}
-
-- (id)autorelease
-{
-    return self;	
-}
-#endif
 
 #pragma mark Internal MKStoreKit functions
 
@@ -326,9 +302,7 @@ static MKStoreManager* _sharedStoreManager;
 	for(NSString *invalidProduct in response.invalidProductIdentifiers)
 		NSLog(@"Problem in iTunes connect configuration for product: %@", invalidProduct);
 #endif
-	
-	[request autorelease];
-	
+		
 	isProductsAvailable = YES;    
     [[NSNotificationCenter defaultCenter] postNotificationName:kProductFetchedNotification 
                                                         object:[NSNumber numberWithBool:isProductsAvailable]];
@@ -336,8 +310,6 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
-	[request autorelease];
-	
 	isProductsAvailable = NO;	
     [[NSNotificationCenter defaultCenter] postNotificationName:kProductFetchedNotification 
                                                         object:[NSNumber numberWithBool:isProductsAvailable]];
@@ -370,7 +342,6 @@ static MKStoreManager* _sharedStoreManager;
 		[numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
 		[numberFormatter setLocale:product.priceLocale];
 		NSString *formattedString = [numberFormatter stringFromNumber:product.price];
-		[numberFormatter release];
 		
 		// you might probably need to change this line to suit your UI needs
 		NSString *description = [NSString stringWithFormat:@"%@ (%@)",[product localizedTitle], formattedString];
@@ -381,7 +352,6 @@ static MKStoreManager* _sharedStoreManager;
 		[productDescriptions addObject: description];
 	}
 	
-	[productDescriptions autorelease];
 	return productDescriptions;
 }
 
@@ -405,7 +375,6 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
 		[numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
 		[numberFormatter setLocale:product.priceLocale];
 		NSString *formattedString = [numberFormatter stringFromNumber:product.price];
-		[numberFormatter release];
         
         NSString *priceString = [NSString stringWithFormat:@"%@", formattedString];
         [priceDict setObject:priceString forKey:product.productIdentifier]; 
@@ -432,7 +401,6 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
                                                    cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
                                                    otherButtonTitles:nil];
              [alert show];
-             [alert release];
              
              if(self.onTransactionCompleted)
                  self.onTransactionCompleted(featureId);                                         
@@ -454,7 +422,13 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
 {
     if ([SKPaymentQueue canMakePayments])
 	{
-		SKPayment *payment = [SKPayment paymentWithProductIdentifier:productId];
+        NSArray *allIds = [self.purchasableObjects valueForKey:@"productIdentifier"];
+        int index = [allIds indexOfObject:productId];
+        
+        if(index == NSNotFound) return;
+        
+        SKProduct *thisProduct = [self.purchasableObjects objectAtIndex:index];
+		SKPayment *payment = [SKPayment paymentWithProduct:thisProduct];
 		[[SKPaymentQueue defaultQueue] addPayment:payment];
 	}
 	else
@@ -465,7 +439,6 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
 											  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
 											  otherButtonTitles: nil];
 		[alert show];
-		[alert release];
 	}
 }
 
@@ -505,7 +478,7 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     self.subscriptionProducts = [NSMutableDictionary dictionary];
     for(NSString *productId in [subscriptions allKeys])
     {
-        MKSKSubscriptionProduct *product = [[[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[subscriptions objectForKey:productId] intValue]] autorelease];        
+        MKSKSubscriptionProduct *product = [[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[subscriptions objectForKey:productId] intValue]];        
         product.receipt = [MKStoreManager dataForKey:productId]; // cached receipt
         
         if(product.receipt)
@@ -562,7 +535,7 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
             // ping server and get response before serializing the product
             // this is a blocking call to post receipt data to your server
             // it should normally take a couple of seconds on a good 3G connection
-            MKSKProduct *thisProduct = [[[MKSKProduct alloc] initWithProductId:productIdentifier receiptData:receiptData] autorelease];
+            MKSKProduct *thisProduct = [[MKSKProduct alloc] initWithProductId:productIdentifier receiptData:receiptData];
             
             [thisProduct verifyReceiptOnComplete:^
              {
@@ -602,7 +575,7 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
         int oldCount = [[MKStoreManager numberForKey:productPurchased] intValue];
         int newCount = oldCount + quantityPurchased;	
         
-        [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productPurchased];        
+        [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productIdentifier];        
     }
     else
     {
@@ -636,7 +609,6 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
 										  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
 										  otherButtonTitles: nil];
 	[alert show];
-	[alert release];
     
     if(self.onTransactionCancelled)
         self.onTransactionCancelled();
