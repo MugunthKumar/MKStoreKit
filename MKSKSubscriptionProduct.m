@@ -82,23 +82,35 @@
 
 -(BOOL) isSubscriptionActive
 {
-    NSString *purchasedDateString = [[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"purchase_date"];
-    if(!purchasedDateString) return NO;
+    //If the status code is not 0 then the validation failed
+    if([[self.verifiedReceiptDictionary objectForKey:@"status"] intValue] != 0){
+        return NO;
+    }
     
-    NSDateFormatter *df = [[NSDateFormatter alloc] init];
-
-    //2011-07-03 05:31:55 Etc/GMT
-    purchasedDateString = [purchasedDateString stringByReplacingOccurrencesOfString:@" Etc/GMT" withString:@""];    
-    NSLocale *POSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
-    [df setLocale:POSIXLocale];
-    [df setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];    
-    [df setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-    
-    NSDate *purchasedDate = [df dateFromString: purchasedDateString];
-    [df release];
-    
-    int numberOfDays = [purchasedDate timeIntervalSinceNow] / (-86400.0);    
-    return (self.subscriptionDays > numberOfDays);
+    //If expires_date is set we should use it.
+    if([[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"]){
+        NSTimeInterval expiresDate = [[[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"] doubleValue]/1000.0;
+        return expiresDate > [[NSDate date] timeIntervalSince1970];
+    }else{
+        NSString *purchasedDateString = [[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"purchase_date"];
+        if(!purchasedDateString) return NO;
+        
+        NSDateFormatter *df = [[NSDateFormatter alloc] init];
+        
+        //2011-07-03 05:31:55 Etc/GMT
+        purchasedDateString = [purchasedDateString stringByReplacingOccurrencesOfString:@" Etc/GMT" withString:@""];    
+        NSLocale *POSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
+        [df setLocale:POSIXLocale];
+        [df setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];    
+        [df setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+        
+        NSDate *purchasedDate = [df dateFromString: purchasedDateString];
+        [df release];
+        
+        int numberOfDays = [purchasedDate timeIntervalSinceNow] / (-86400.0);    
+        return (self.subscriptionDays > numberOfDays);
+    }
+    return NO;
 }
 
 
