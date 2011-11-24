@@ -3,7 +3,7 @@
 //  MKStoreKit (Version 4.0)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
-//  Version 4.0
+//  Version 4.1
 //  Copyright 2010 Steinlogic. All rights reserved.
 //	File created using Singleton XCode Template by Mugunth Kumar (http://mugunthkumar.com
 //  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
@@ -73,6 +73,40 @@
 
 static MKStoreManager* _sharedStoreManager;
 
++(void) updateFromiCloud:(NSNotification*) notificationObject {
+    
+    NSLog(@"Updating from iCloud");
+        
+    NSUbiquitousKeyValueStore *iCloudStore = [NSUbiquitousKeyValueStore defaultStore];
+    NSDictionary *dict = [iCloudStore dictionaryRepresentation];
+    
+    [dict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        
+        NSError *error = nil;
+        [SFHFKeychainUtils storeUsername:key 
+                             andPassword:obj
+                          forServiceName:@"MKStoreKit"
+                          updateExisting:YES 
+                                   error:&error];
+        
+        if(error)
+            NSLog(@"%@", [error localizedDescription]);
+    }];    
+}
+
++(BOOL) iCloudAvailable {
+    
+    if(NSClassFromString(@"NSUbiquitousKeyValueStore")) { // is iOS 5?
+        
+        if([NSUbiquitousKeyValueStore defaultStore]) {  // is iCloud enabled
+     
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
 - (void)dealloc {
     
     [_purchasableObjects release], _purchasableObjects = nil;
@@ -110,6 +144,11 @@ static MKStoreManager* _sharedStoreManager;
     
     if(error)
         NSLog(@"%@", [error localizedDescription]);
+    
+    if([self iCloudAvailable]) {
+        [[NSUbiquitousKeyValueStore defaultStore] setObject:objectString forKey:key];
+        [[NSUbiquitousKeyValueStore defaultStore] synchronize];
+    }
 }
 
 +(id) objectForKey:(NSString*) key
@@ -139,38 +178,36 @@ static MKStoreManager* _sharedStoreManager;
 
 + (MKStoreManager*)sharedManager
 {
-	@synchronized(self) {
-		
-        if (_sharedStoreManager == nil) {
+	if(!_sharedStoreManager) {
+		static dispatch_once_t oncePredicate;
+		dispatch_once(&oncePredicate, ^{
+			_sharedStoreManager = [[super allocWithZone:nil] init];            
+        });
             
 #if TARGET_IPHONE_SIMULATOR
-			NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
+        NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
 #else
-            _sharedStoreManager = [[self alloc] init];					
-			_sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
-			[_sharedStoreManager requestProductData];						
-			_sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
-			[[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];            
-            [_sharedStoreManager startVerifyingSubscriptionReceipts];
+        _sharedStoreManager = [[self alloc] init];					
+        _sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
+        [_sharedStoreManager requestProductData];						
+        _sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
+        [[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];            
+        [_sharedStoreManager startVerifyingSubscriptionReceipts];
+        
+        if([self iCloudAvailable])
+            [[NSNotificationCenter defaultCenter] addObserver:self 
+                                                 selector:@selector(updateFromiCloud:) 
+                                                     name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
+                                                   object:nil];
+
 #endif
-        }
     }
     return _sharedStoreManager;
 }
 
 + (id)allocWithZone:(NSZone *)zone
-
 {	
-    @synchronized(self) {
-		
-        if (_sharedStoreManager == nil) {
-			
-            _sharedStoreManager = [super allocWithZone:zone];			
-            return _sharedStoreManager;  // assignment and return on first allocation
-        }
-    }
-	
-    return nil; //on subsequent allocation attempts return nil	
+    return [self sharedManager];
 }
 
 

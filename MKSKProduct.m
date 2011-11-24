@@ -1,7 +1,7 @@
 //
 //  MKSKProduct.m
 //  MKStoreKitDemo
-//  Version 4.0
+//  Version 4.1
 //
 //  Created by Mugunth on 04/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
@@ -68,26 +68,26 @@ static NSMutableData *sDataFromConnection;
     {
         [onReviewRequestVerificationSucceeded release];
         onReviewRequestVerificationSucceeded = [completionBlock copy];
-
+        
         [onReviewRequestVerificationFailed release];
         onReviewRequestVerificationFailed = [errorBlock copy];
-
+        
      	UIDevice *dev = [UIDevice currentDevice];
-	NSString *uniqueID;
-	if ([dev respondsToSelector:@selector(uniqueIdentifier)])
-		uniqueID = dev.uniqueIdentifier;
-	else {
-		NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-		id uuid = [defaults objectForKey:@"uniqueID"];
-		if (uuid)
-			uniqueID = (NSString *)uuid;
-		else {
-			CFStringRef cfUuid = CFUUIDCreateString(NULL, CFUUIDCreate(NULL))
-			uniqueID = (NSString *)cfUuid;
-			CFRelease(cfUuid);
-			[defaults setObject:uniqueID forKey:@"uniqueID"];
-		}
-	}
+        NSString *uniqueID;
+        if ([dev respondsToSelector:@selector(uniqueIdentifier)])
+            uniqueID = dev.uniqueIdentifier;
+        else {
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            id uuid = [defaults objectForKey:@"uniqueID"];
+            if (uuid)
+                uniqueID = (NSString *)uuid;
+            else {
+                CFStringRef cfUuid = CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
+                uniqueID = (NSString *)cfUuid;
+                CFRelease(cfUuid);
+                [defaults setObject:uniqueID forKey:@"uniqueID"];
+            }
+        }
         // check udid and featureid with developer's server
 		
         NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", OWN_SERVER, @"featureCheck.php"]];
@@ -168,7 +168,7 @@ didReceiveResponse:(NSURLResponse *)response
                                 autorelease];
 	
     self.dataFromConnection = nil;
-
+    
 	if([responseString isEqualToString:@"YES"])		
 	{
         if(self.onReceiptVerificationSucceeded)
@@ -194,7 +194,7 @@ didReceiveResponse:(NSURLResponse *)response
 - (void)connection:(NSURLConnection *)connection
   didFailWithError:(NSError *)error
 {
-
+    
     self.dataFromConnection = nil;
     if(self.onReceiptVerificationFailed)
     {
@@ -224,7 +224,7 @@ didReceiveResponse:(NSURLResponse *)response
                                 autorelease];
 	
     [sDataFromConnection release], sDataFromConnection = nil;
-
+    
 	if([responseString isEqualToString:@"YES"])		
 	{
         if(onReviewRequestVerificationSucceeded)
@@ -249,7 +249,7 @@ didReceiveResponse:(NSURLResponse *)response
   didFailWithError:(NSError *)error
 {
     [sDataFromConnection release], sDataFromConnection = nil;
-
+    
     if(onReviewRequestVerificationFailed)
     {
         onReviewRequestVerificationFailed(nil);    

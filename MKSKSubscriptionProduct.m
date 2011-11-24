@@ -1,7 +1,7 @@
 //
 //  MKSKSubscriptionProduct.m
 //  MKStoreKitDemo
-//  Version 4.0
+//  Version 4.1
 //
 //  Created by Mugunth on 03/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
@@ -83,7 +83,11 @@
 -(BOOL) isSubscriptionActive
 {
     NSString *purchasedDateString = [[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"purchase_date"];
-    if(!purchasedDateString) return NO;
+    if(!purchasedDateString)  {
+     
+        NSLog(@"Receipt Dictionary from Apple Server is invalid: %@", verifiedReceiptDictionary);
+        return NO;
+    }
     
     NSDateFormatter *df = [[NSDateFormatter alloc] init];
 

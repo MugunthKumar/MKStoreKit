@@ -1,7 +1,7 @@
 //
 //  MKSKSubscriptionProduct.h
 //  MKStoreKitDemo
-//  Version 4.0
+//  Version 4.1
 //
 //  Created by Mugunth on 03/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
