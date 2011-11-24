@@ -66,7 +66,7 @@ static NSMutableData *sDataFromConnection;
 {
     if(REVIEW_ALLOWED)
     {
-        onReviewRequestVerificationSucceeded = [completionBlock copy];        
+        onReviewRequestVerificationSucceeded = [completionBlock copy];
         onReviewRequestVerificationFailed = [errorBlock copy];
         
         UIDevice *dev = [UIDevice currentDevice];
