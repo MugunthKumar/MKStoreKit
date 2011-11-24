@@ -557,7 +557,7 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     }        
     else
     {
-        if(OWN_SERVER && SERVER_PRODUCT_MODEL)
+        if(OWN_SERVER != nil && SERVER_PRODUCT_MODEL)
         {
             // ping server and get response before serializing the product
             // this is a blocking call to post receipt data to your server
