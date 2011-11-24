@@ -5,10 +5,10 @@
 	$password = "wrong password";
 	$dbname = "mugunth1_udid";
 	
-	$prod = $_POST['productid'];
-	$udid = $_POST['udid'];
-	$email = $_POST['email'];
-	$message = $_POST['message'];
+	$prod = filter_input(INPUT_POST, 'productid', FILTER_SANITIZE_NUMBER_INT);
+	$udid = filter_input(INPUT_POST, $_POST['udid'], FILTER_SANITIZE_STRING);
+	$email = filter_input(INPUT_POST, $_POST['email'], FILTER_SANITIZE_EMAIL;
+	$message = filter_input(INPUT_POST, $_POST['message'], FILTER_SANITIZE_ENCODED);
     // Connect to database server
 
     $hd = mysql_connect("localhost", $user, $password)
@@ -23,7 +23,7 @@
 
     // Execute sample query (insert it into mksync all data in customer table)
 
-    $res = mysql_query("INSERT INTO mugunth1_udid.requests(udid, productid, email, message) VALUES ('$udid', '$prod', '$email', '$message')",$hd)
+    $res = mysql_query("INSERT INTO mugunth1_udid.requests(udid, productid, email, message) VALUES ('".mysql_real_escape_string($udid)."', '".mysql_real_escape_string($prod)."', '".mysql_real_escape_string($email)."', '".mysql_real_escape_string($message)."')",$hd)
 
           or die ("Unable to insert :-(");
 	
