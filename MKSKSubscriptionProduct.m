@@ -84,8 +84,7 @@
 {    
     if([[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"]){
         
-        NSTimeInterval expiresDate = [[[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"] doubleValue]/1000.0;
-        
+        NSTimeInterval expiresDate = [[[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"] doubleValue]/1000.0;        
         return expiresDate > [[NSDate date] timeIntervalSince1970];
         
 	}else{
@@ -103,7 +102,6 @@
         [df setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];            
         [df setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
         NSDate *purchasedDate = [df dateFromString: purchasedDateString];        
-        [df release];
         int numberOfDays = [purchasedDate timeIntervalSinceNow] / (-86400.0);            
         return (self.subscriptionDays > numberOfDays);        
     }
