@@ -1,4 +1,7 @@
-This is version 4 of MKStoreKit
+This is version 4.1 of MKStoreKit
+*Important*
+Please merge the pull request from drewjw81 after you clone this code.
+
 Read the <a href="http://mk.sg/8j"> blog post</a> for more.
 The source code, MKStoreKit, contains several new objective c files notably MKStoreKitConfigs.h among others like, MKStoreManager.h/m and MKStoreObserver.h/m and five server side files. The MKStoreManager is a singleton class that takes care of *everything*. Just include StoreKit.Framework and Security.Framework into your product and drag these four files into the project. You then have to initialize it by calling [MKStoreManager sharedManager] in your applicationDidFinishLaunching. From then on, it does the magic. The MKStoreKit automatically activates/deactivates features using your userDefaults. When a feature is purchased, it automagically records it into NSUserDefaults. For checking whether the user has purchased the feature, you can call a function like,
 
@@ -24,28 +27,6 @@ It’s that simple with my MKStoreKit.
 MKStoreKit uses zLib licensing
 And so all of my source code can be used royalty-free into your app. Just make sure that you don’t remove the copyright notice from the source code if you make your app open source. You don’t have to attribute me in your app, although I would be glad if you do so.
 
-What's new in Version 4
-MKStoreKitDelegate removed in favour of Blocks
-Keychain support using SFHFKeychainUtils
-Basic support for ARC
-Full support for auto-renewable subscriptions
-The code is now iOS 4 *only*
-
-What's new in Version 3.5
-Support for Auto renewable subscriptions
-	-MKStoreKit can automatically verify your subscriptions without requiring user to enter password
-Bug fix in consumable module
-
-What's new in Version 3
-Support for Server Product Model
-MKStoreKit can automatically post the receipt data to your server
-and "remember" the purchases only when your server returns.
-The server code for the same in PHP is also available within MKStoreKit
-
-What's new in Version 2
-
-In Version 2, support for pinging the developer server for checking review requests is added. If you want to use this feature, you have to fill in "ownServer" variable to the location where you copy the server file featureCheck.php
-
 The database required can be created from the sql file attached.
 
 The code that you need for setting up your server is present in the ServerCode folder. 
@@ -56,5 +37,4 @@ http://api.mycompany.com/inapp/
 The URL which you should copy to "ownServer" variable in MKStoreManager.m is http://api.mycompany.com/inapp/featureCheck.php
 Copy this URL to ownServer parameter in MKStoreManager.m
 
-It should all work. If it doesn't, hire me for debugging it! :)
 
