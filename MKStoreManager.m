@@ -575,7 +575,7 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
         int oldCount = [[MKStoreManager numberForKey:productPurchased] intValue];
         int newCount = oldCount + quantityPurchased;	
         
-        [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productIdentifier];        
+        [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productPurchased];        
     }
     else
     {
