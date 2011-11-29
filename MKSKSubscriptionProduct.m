@@ -97,7 +97,7 @@
         NSDateFormatter *df = [[NSDateFormatter alloc] init];
         //2011-07-03 05:31:55 Etc/GMT
         purchasedDateString = [purchasedDateString stringByReplacingOccurrencesOfString:@" Etc/GMT" withString:@""];    
-        NSLocale *POSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
+        NSLocale *POSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
         [df setLocale:POSIXLocale];        
         [df setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];            
         [df setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
@@ -125,7 +125,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-    self.verifiedReceiptDictionary = [[[self.dataFromConnection copy] autorelease] objectFromJSONData];                                              
+    self.verifiedReceiptDictionary = [[self.dataFromConnection copy] objectFromJSONData];                                              
     if(self.onSubscriptionVerificationCompleted)
     {
         self.onSubscriptionVerificationCompleted([NSNumber numberWithBool:[self isSubscriptionActive]]);
