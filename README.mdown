@@ -1,4 +1,7 @@
 This is version 4.1 of MKStoreKit.
+This is ARC only code.
+For a non-ARC version revert back to a few version in history.
+
 Few minor bugs reported in the past two months are fixed and iCloud syncing is implemented.
 
 I'm working on supporting Lion. Not sure if the current version already works. (I guess it should). 
