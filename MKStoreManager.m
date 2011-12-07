@@ -383,6 +383,28 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     return priceDict;
 }
 
+-(void) showAlertWithTitle:(NSString*) title message:(NSString*) message {
+    
+#if TARGET_OS_IPHONE
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title
+                                                    message:message
+                                                   delegate:nil 
+                                          cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
+                                          otherButtonTitles:nil];
+    [alert show];             
+#elif TARGET_OS_MAC
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:NSLocalizedString(@"Dismiss", @"")];
+    
+    [alert setMessageText:title];
+    [alert setInformativeText:message];             
+    [alert setAlertStyle:NSInformationalAlertStyle];
+    
+    [alert runModal];
+    
+#endif
+}
+
 - (void) buyFeature:(NSString*) featureId
          onComplete:(void (^)(NSString*)) completionBlock         
         onCancelled:(void (^)(void)) cancelBlock
@@ -395,12 +417,8 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
      {
          if([isAllowed boolValue])
          {
-             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Review request approved", @"")
-                                                             message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")
-                                                            delegate:self 
-                                                   cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-                                                   otherButtonTitles:nil];
-             [alert show];
+             [self showAlertWithTitle:NSLocalizedString(@"Review request approved", @"")
+                              message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")];
              
              if(self.onTransactionCompleted)
                  self.onTransactionCompleted(featureId);                                         
@@ -433,12 +451,8 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
 	}
 	else
 	{
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
-														message:NSLocalizedString(@"Check your parental control settings and try again later", @"")
-													   delegate:self 
-											  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-											  otherButtonTitles: nil];
-		[alert show];
+        [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
+                         message:NSLocalizedString(@"Check your parental control settings and try again later", @"")];
 	}
 }
 
@@ -507,6 +521,11 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     }
 }
 
+-(NSData*) receiptFromBundle {
+    
+    return nil;
+}
+
 #pragma mark In-App purchases callbacks
 // In most cases you don't have to touch these methods
 -(void) provideContent: (NSString*) productIdentifier 
@@ -515,6 +534,9 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
     if(subscriptionProduct)
     {                
+        // MAC In App Purchases can never be a subscription product (at least as on Dec 2011)
+        // so this can be safely ignored.
+        
         subscriptionProduct.receipt = receiptData;
         [subscriptionProduct verifyReceiptOnComplete:^(NSNumber* isActive)
          {
@@ -530,6 +552,23 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     }        
     else
     {
+        if(!receiptData) {
+        
+            // could be a mac in app receipt.
+            // read from receipts and verify here
+            receiptData = [self receiptFromBundle];
+            if(!receiptData) {
+                if(self.onTransactionCancelled)
+                {
+                    self.onTransactionCancelled(productIdentifier);
+                }
+                else
+                {
+                    NSLog(@"Receipt invalid");
+                }
+            }
+        }
+        
         if(OWN_SERVER && SERVER_PRODUCT_MODEL)
         {
             // ping server and get response before serializing the product
@@ -603,13 +642,8 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
     NSLog(@"error: %@", transaction.error);    
 #endif
 	
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[transaction.error localizedFailureReason] 
-													message:[transaction.error localizedRecoverySuggestion]
-												   delegate:self 
-										  cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-										  otherButtonTitles: nil];
-	[alert show];
-    
+    [self showAlertWithTitle:[transaction.error localizedFailureReason]  message:[transaction.error localizedRecoverySuggestion]];
+
     if(self.onTransactionCancelled)
         self.onTransactionCancelled();
 }

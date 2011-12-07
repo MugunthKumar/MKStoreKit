@@ -44,6 +44,75 @@ static NSMutableData *sDataFromConnection;
 @synthesize theConnection;
 @synthesize dataFromConnection;
 
++(NSString*) deviceId {
+    
+#if TARGET_OS_IPHONE
+    UIDevice *dev = [UIDevice currentDevice];
+    NSString *uniqueID;
+    if ([dev respondsToSelector:@selector(uniqueIdentifier)])
+        uniqueID = [dev valueForKey:@"uniqueIdentifier"];
+    else {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        id uuid = [defaults objectForKey:@"uniqueID"];
+        if (uuid)
+            uniqueID = (NSString *)uuid;
+        else {
+            CFStringRef cfUuid = CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
+            uniqueID = (__bridge NSString *)cfUuid;
+            CFRelease(cfUuid);
+            [defaults setObject:uniqueID forKey:@"uniqueID"];
+        }
+    }
+#elif TARGET_OS_MAC 
+    
+    kern_return_t			 kernResult;
+	mach_port_t			   master_port;
+	CFMutableDictionaryRef	matchingDict;
+	io_iterator_t			 iterator;
+	io_object_t			   service;
+	CFDataRef				 macAddress = nil;
+    
+	kernResult = IOMasterPort(MACH_PORT_NULL, &master_port);
+	if (kernResult != KERN_SUCCESS) {
+		printf("IOMasterPort returned %d\n", kernResult);
+		return nil;
+	}
+    
+	matchingDict = IOBSDNameMatching(master_port, 0, "en0");
+	if(!matchingDict) {
+		printf("IOBSDNameMatching returned empty dictionary\n");
+		return nil;
+	}
+    
+	kernResult = IOServiceGetMatchingServices(master_port, matchingDict, &iterator);
+	if (kernResult != KERN_SUCCESS) {
+		printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+		return nil;
+	}
+    
+	while((service = IOIteratorNext(iterator)) != 0)
+	{
+		io_object_t		parentService;
+        
+		kernResult = IORegistryEntryGetParentEntry(service, kIOServicePlane, &parentService);
+		if(kernResult == KERN_SUCCESS)
+		{
+            if(macAddress)
+                CFRelease(macAddress);
+			macAddress = IORegistryEntryCreateCFProperty(parentService, CFSTR("IOMACAddress"), kCFAllocatorDefault, 0);
+			IOObjectRelease(parentService);
+		}
+		else {
+			printf("IORegistryEntryGetParentEntry returned %d\n", kernResult);
+		}
+        
+		IOObjectRelease(service);
+	}
+    
+	return [[NSString alloc] initWithData:(__bridge NSData*) macAddress encoding:NSASCIIStringEncoding];
+#endif
+}
+
 -(id) initWithProductId:(NSString*) aProductId receiptData:(NSData*) aReceipt
 {
     if((self = [super init]))
@@ -53,7 +122,6 @@ static NSMutableData *sDataFromConnection;
     }
     return self;
 }
-
 
 #pragma mark -
 #pragma mark In-App purchases promo codes support
@@ -68,23 +136,8 @@ static NSMutableData *sDataFromConnection;
     {
         onReviewRequestVerificationSucceeded = [completionBlock copy];
         onReviewRequestVerificationFailed = [errorBlock copy];
-        
-        UIDevice *dev = [UIDevice currentDevice];
-        NSString *uniqueID;
-        if ([dev respondsToSelector:@selector(uniqueIdentifier)])
-            uniqueID = [dev valueForKey:@"uniqueIdentifier"];
-        else {
-            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            id uuid = [defaults objectForKey:@"uniqueID"];
-            if (uuid)
-                uniqueID = (NSString *)uuid;
-            else {
-                CFStringRef cfUuid = CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
-                uniqueID = (__bridge NSString *)cfUuid;
-                CFRelease(cfUuid);
-                [defaults setObject:uniqueID forKey:@"uniqueID"];
-            }
-        }
+
+        NSString *uniqueID = [self deviceId];
         // check udid and featureid with developer's server
 		
         NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", OWN_SERVER, @"featureCheck.php"]];
