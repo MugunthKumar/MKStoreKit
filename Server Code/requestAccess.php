@@ -6,9 +6,9 @@
 	$dbname = "mugunth1_udid";
 	
 	$prod = filter_input(INPUT_POST, 'productid', FILTER_SANITIZE_NUMBER_INT);
-	$udid = filter_input(INPUT_POST, $_POST['udid'], FILTER_SANITIZE_STRING);
-	$email = filter_input(INPUT_POST, $_POST['email'], FILTER_SANITIZE_EMAIL;
-	$message = filter_input(INPUT_POST, $_POST['message'], FILTER_SANITIZE_ENCODED);
+	$udid = filter_input(INPUT_POST, 'udid', FILTER_SANITIZE_STRING);
+	$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL;
+	$message = filter_input(INPUT_POST, 'message', FILTER_SANITIZE_ENCODED);
     // Connect to database server
 
     $hd = mysql_connect("localhost", $user, $password)
