@@ -86,8 +86,9 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
                       updateExisting:YES 
                                error:&error];
     
-    if(error)
+    if(error) {
         VCLog(@"%@", [error localizedDescription]);
+    }
 }
 
 - (BOOL)removeAllKeychainData {
@@ -149,6 +150,11 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
 }
 
 - (BOOL)isVirtualGoodAvailable:(NSString *)virtualGoodId {
+    NSDictionary *good = [purchasableObjects objectForKey:virtualGoodId];
+    if ( [[good objectForKey:@"price"] intValue] == 0 ) {
+        return YES;
+    }
+
     return [[VirtualCurrencyManager objectForKey:virtualGoodId] boolValue];
 }
 

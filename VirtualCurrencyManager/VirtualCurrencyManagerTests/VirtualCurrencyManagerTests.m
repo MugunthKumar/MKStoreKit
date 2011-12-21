@@ -26,7 +26,6 @@ static NSDictionary *goods;
                                     nil];
     
     NSDictionary *carUpgrade1 = [NSDictionary dictionaryWithObjectsAndKeys:
-                                 @"com.nasatrainedmonkeys.car.upgrade1", @"id",
                                  @"Car Upgrade 1", @"name",
                                  [NSNumber numberWithInt:200], @"price",
                                  @"Car upgrade 1 with more speed", @"desc", 
