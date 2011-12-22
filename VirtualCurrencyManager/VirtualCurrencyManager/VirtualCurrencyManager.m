@@ -168,7 +168,7 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
 
 - (BOOL)canConsumeVirtualGood:(NSString*)virtualGoodId quantity:(NSInteger)quantity {
     NSInteger count = [[VirtualCurrencyManager objectForKey:virtualGoodId] intValue];
-    return count > quantity;
+    return count >= quantity;
 }
 
 - (BOOL)consumeVirtualGood:(NSString*)virtualGoodId quantity:(NSInteger)quantity {
