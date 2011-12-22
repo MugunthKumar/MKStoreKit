@@ -26,11 +26,12 @@
 - (void)setVirtualGoods:(NSDictionary *)virtualGoods;
 
 - (void)buyVirtualGood:(NSString *)virtualGoodId
-            onComplete:(void (^)(NSString*)) completionBlock         
+            onComplete:(void (^)(NSString *)) completionBlock         
                 onFail:(void (^)(void)) failBlock;
 
-- (BOOL)isVirtualGoodPurchased:(NSString*)virtualGoodId;
+- (BOOL)isVirtualGoodPurchased:(NSString *)virtualGoodId;
 - (BOOL)isVirtualGoodAvailable:(NSString *)virtualGoodId;
+- (NSInteger)getAmount:(NSString *)virtualGoodId;
 
 - (BOOL)canConsumeVirtualGood:(NSString*)virtualGoodId quantity:(NSInteger)quantity;
 - (BOOL)consumeVirtualGood:(NSString*)virtualGoodId quantity:(NSInteger)quantity;

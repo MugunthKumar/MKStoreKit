@@ -181,7 +181,10 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
                                  forKey:virtualGoodId];
     
     return YES;
-    
+}
+
+- (NSInteger)getAmount:(NSString *)virtualGoodId {
+    return [[VirtualCurrencyManager objectForKey:virtualGoodId] intValue];    
 }
 
 - (NSInteger)currency {
