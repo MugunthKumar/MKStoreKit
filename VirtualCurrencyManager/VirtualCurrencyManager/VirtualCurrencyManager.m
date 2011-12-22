@@ -110,6 +110,10 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
     self.purchasableObjects = virtualGoods;
 }
 
+- (NSDictionary *)getVirtualGood:(NSString *)virtualGoodId {
+    return [self.purchasableObjects objectForKey:virtualGoodId];
+}
+
 - (void)buyVirtualGood:(NSString *)virtualGoodId
             onComplete:(void (^)(NSString*)) completionBlock         
                 onFail:(void (^)(void)) failBlock {

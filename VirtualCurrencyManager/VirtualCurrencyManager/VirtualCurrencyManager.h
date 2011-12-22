@@ -22,6 +22,7 @@
 
 + (VirtualCurrencyManager*)sharedManager;
 
+- (NSDictionary *)getVirtualGood:(NSString *)virtualGoodId;
 - (void)setVirtualGoods:(NSDictionary *)virtualGoods;
 
 - (void)buyVirtualGood:(NSString *)virtualGoodId
