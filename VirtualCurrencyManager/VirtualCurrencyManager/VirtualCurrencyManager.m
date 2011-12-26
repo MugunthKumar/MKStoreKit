@@ -138,7 +138,7 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
     }
 
     // We will use the id key for goods than consume different
-    // quantities
+    // quantities but increases the same item.
     NSString *goodIdToIncrease = virtualGoodId;
     if ( [good objectForKey:@"id"] ) {
         goodIdToIncrease = [good objectForKey:@"id"];
