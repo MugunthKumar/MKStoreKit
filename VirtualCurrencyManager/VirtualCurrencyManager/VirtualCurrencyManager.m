@@ -136,8 +136,15 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
         failBlock();
         return;
     }
-    
-    NSInteger count = [[VirtualCurrencyManager numberForKey:virtualGoodId] intValue];
+
+    // We will use the id key for goods than consume different
+    // quantities
+    NSString *goodIdToIncrease = virtualGoodId;
+    if ( [good objectForKey:@"id"] ) {
+        goodIdToIncrease = [good objectForKey:@"id"];
+    }
+
+    NSInteger count = [[VirtualCurrencyManager numberForKey:goodIdToIncrease] intValue];
     if ( ![[good objectForKey:@"consumable"] boolValue] &&
         count > 1) {
         VCLog(@"Couldn't buy good: %@. It's not consumable and the user has it",
@@ -148,7 +155,7 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
     
     // If we reach here, we can buy the item.
     [VirtualCurrencyManager setObject:[NSNumber numberWithInt: count + [[good objectForKey:@"amount"] intValue]]
-                                 forKey:virtualGoodId];
+                                 forKey:goodIdToIncrease];
     self.currency -= [[good objectForKey:@"price"] intValue];
     completionBlock(virtualGoodId);
 }
