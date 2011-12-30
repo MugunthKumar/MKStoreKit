@@ -63,6 +63,7 @@ static NSMutableData *sDataFromConnection;
             [defaults setObject:uniqueID forKey:@"uniqueID"];
         }
     }
+    return uniqueID;
 #elif TARGET_OS_MAC 
     
     kern_return_t			 kernResult;
