@@ -39,4 +39,5 @@ http://api.mycompany.com/inapp/
 The URL which you should copy to "ownServer" variable in MKStoreManager.m is http://api.mycompany.com/inapp/featureCheck.php
 Copy this URL to ownServer parameter in MKStoreManager.m
 
+If you are going to use VirtualCurrency check the VirtualCurrencyManager class.
 
