@@ -67,7 +67,7 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
     return [NSNumber numberWithInt:[[VirtualCurrencyManager objectForKey:key] intValue]];
 }
 
-+(void) setObject:(id) object forKey:(NSString*) key
++ (void) setObject:(id) object forKey:(NSString*) key
 {
     NSString *objectString = nil;
     if([object isKindOfClass:[NSData class]])
@@ -158,6 +158,12 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
                                  forKey:goodIdToIncrease];
     self.currency -= [[good objectForKey:@"price"] intValue];
     completionBlock(virtualGoodId);
+}
+
+- (void)forceVirtualGoodIncrease:(NSString *)virtualGoodId byAmount:(NSInteger)amount {    
+    [VirtualCurrencyManager setObject:([NSNumber numberWithInt:amount 
+                                        + [[VirtualCurrencyManager objectForKey:virtualGoodId] intValue]])
+                               forKey:virtualGoodId];
 }
 
 - (BOOL)isVirtualGoodAvailable:(NSString *)virtualGoodId {

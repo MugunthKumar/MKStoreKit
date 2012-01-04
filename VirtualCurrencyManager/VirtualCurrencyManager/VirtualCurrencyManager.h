@@ -36,6 +36,8 @@
 - (BOOL)canConsumeVirtualGood:(NSString*)virtualGoodId quantity:(NSInteger)quantity;
 - (BOOL)consumeVirtualGood:(NSString*)virtualGoodId quantity:(NSInteger)quantity;
 
+- (void)forceVirtualGoodIncrease:(NSString *)virtualGoodId byAmount:(NSInteger)amount;
+
 //for testing proposes you can use this method to remove all the saved keychain data (saved purchases, etc.)
 - (BOOL)removeAllKeychainData;
 
