@@ -370,7 +370,7 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
 	{
 		SKProduct *product = [self.purchasableObjects objectAtIndex:i];
 		
-		NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+		NSNumberFormatter *numberFormatter = [[[NSNumberFormatter alloc] init] autorelease];
 		[numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
 		[numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
 		[numberFormatter setLocale:product.priceLocale];
