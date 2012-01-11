@@ -93,7 +93,11 @@ static VirtualCurrencyManager *_sharedVirtualCurrencyManager;
 
 - (BOOL)removeAllKeychainData {
     NSError *error;
-    
+
+    [SFHFKeychainUtils deleteItemForUsername:@"currency"
+                              andServiceName:@"VirtualCurrencyManager"
+                                       error:&error];
+
     //loop through all the saved keychain data and remove it    
     for (id key in self.purchasableObjects) {
         [SFHFKeychainUtils deleteItemForUsername:key andServiceName:@"VirtualCurrencyManager" error:&error];
