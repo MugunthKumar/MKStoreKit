@@ -73,24 +73,25 @@
 
 static MKStoreManager* _sharedStoreManager;
 
-+(void) updateFromiCloud:(NSNotification*) notificationObject {
-    
-    NSLog(@"Updating from iCloud");
-        
+-(void) updateFromiCloud:(NSNotification*) notificationObject {
     NSUbiquitousKeyValueStore *iCloudStore = [NSUbiquitousKeyValueStore defaultStore];
     NSDictionary *dict = [iCloudStore dictionaryRepresentation];
     
+    __block NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
+    __block NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
+    __block NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
+   
     [dict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-        
-        NSError *error = nil;
-        [SFHFKeychainUtils storeUsername:key 
-                             andPassword:obj
-                          forServiceName:@"MKStoreKit"
-                          updateExisting:YES 
-                                   error:&error];
-        
-        if(error)
-            NSLog(@"%@", [error localizedDescription]);
+        BOOL isItem = NO;
+       
+        isItem|= [consumables containsObject:key];
+        isItem|= [nonConsumables containsObject:key];
+        isItem|= [subscriptions containsObject:key];
+       
+        if (isItem)
+        {
+            [[self class] setObject:obj forKey:key];
+        }
     }];    
 }
 
@@ -126,11 +127,15 @@ static MKStoreManager* _sharedStoreManager;
 +(void) setObject:(id) object forKey:(NSString*) key
 {
     NSString *objectString = nil;
-    if([object isKindOfClass:[NSData class]])
+    if ([object isKindOfClass:[NSString class]])
+    {
+        objectString = object;
+    }
+    else if([object isKindOfClass:[NSData class]])
     {
         objectString = [[NSString alloc] initWithData:object encoding:NSUTF8StringEncoding];
     }
-    if([object isKindOfClass:[NSNumber class]])
+    else if([object isKindOfClass:[NSNumber class]])
     {       
         objectString = [(NSNumber*)object stringValue];
     }
@@ -194,7 +199,7 @@ static MKStoreManager* _sharedStoreManager;
         [_sharedStoreManager startVerifyingSubscriptionReceipts];
         
         if([self iCloudAvailable])
-            [[NSNotificationCenter defaultCenter] addObserver:self 
+            [[NSNotificationCenter defaultCenter] addObserver:_sharedStoreManager 
                                                  selector:@selector(updateFromiCloud:) 
                                                      name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
                                                    object:nil];
