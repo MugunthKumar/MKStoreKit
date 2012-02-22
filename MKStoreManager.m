@@ -579,6 +579,8 @@ NSString *upgradePrice = [prices objectForKey:@"com.mycompany.upgrade"]
             [thisProduct verifyReceiptOnComplete:^
              {
                  [self rememberPurchaseOfProduct:productIdentifier];
+                 if(self.onTransactionCompleted)
+                     self.onTransactionCompleted(productIdentifier);
              }
                                          onError:^(NSError* error)
              {
