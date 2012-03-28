@@ -14,7 +14,7 @@
 	</dict>
 	<key>Non-Consumables</key>
 	<array>
-		<string>com.mugunthkumar.inappsubtest.nonconsumable</string>
+		<string>com.mugunthkumar.iconify.test</string>
 	</array>
 	<key>Subscriptions</key>
 	<dict>
