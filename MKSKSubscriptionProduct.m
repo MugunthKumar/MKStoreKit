@@ -84,8 +84,7 @@
 {    
   if([[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"]){
     
-    NSTimeInterval expiresDate = [[[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"] doubleValue]/1000.0;
-    
+    NSTimeInterval expiresDate = [[[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"] doubleValue]/1000.0;        
     return expiresDate > [[NSDate date] timeIntervalSince1970];
     
 	}else{
@@ -98,12 +97,11 @@
     NSDateFormatter *df = [[NSDateFormatter alloc] init];
     //2011-07-03 05:31:55 Etc/GMT
     purchasedDateString = [purchasedDateString stringByReplacingOccurrencesOfString:@" Etc/GMT" withString:@""];    
-    NSLocale *POSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
+    NSLocale *POSIXLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
     [df setLocale:POSIXLocale];        
     [df setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];            
     [df setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
     NSDate *purchasedDate = [df dateFromString: purchasedDateString];        
-    [df release];
     int numberOfDays = [purchasedDate timeIntervalSinceNow] / (-86400.0);            
     return (self.subscriptionDays > numberOfDays);        
   }
@@ -127,7 +125,7 @@ didReceiveResponse:(NSURLResponse *)response
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-  self.verifiedReceiptDictionary = [[[self.dataFromConnection copy] autorelease] objectFromJSONData];                                              
+  self.verifiedReceiptDictionary = [[self.dataFromConnection copy] objectFromJSONData];                                              
   if(self.onSubscriptionVerificationCompleted)
   {
     self.onSubscriptionVerificationCompleted([NSNumber numberWithBool:[self isSubscriptionActive]]);

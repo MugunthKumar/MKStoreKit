@@ -96,7 +96,6 @@ static MKStoreManager* _sharedStoreManager;
 
 +(BOOL) iCloudAvailable {
   
-  
   if(NSClassFromString(@"NSUbiquitousKeyValueStore")) { // is iOS 5?
     
     if([NSUbiquitousKeyValueStore defaultStore]) {  // is iCloud enabled
@@ -178,31 +177,27 @@ static MKStoreManager* _sharedStoreManager;
 
 + (MKStoreManager*)sharedManager
 {
-#if TARGET_IPHONE_SIMULATOR
-  NSLog(@"You are running in iOS Simulator. MKStoreKit runs only on devices");
-#else
-  
 	if(!_sharedStoreManager) {
+#if TARGET_IPHONE_SIMULATOR
+    NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
+#else
 		static dispatch_once_t oncePredicate;
-		dispatch_once(&oncePredicate, ^{
+		dispatch_once(&oncePredicate, ^{      
 			_sharedStoreManager = [[self alloc] init];            
       _sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
+      [_sharedStoreManager requestProductData];						
       _sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
       [[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];            
-    });
-    
-    [_sharedStoreManager requestProductData];						
-    [_sharedStoreManager startVerifyingSubscriptionReceipts];
-    
-    if([self iCloudAvailable]) {
+      [_sharedStoreManager startVerifyingSubscriptionReceipts];    });
+        
+    if([self iCloudAvailable])
       [[NSNotificationCenter defaultCenter] addObserver:self 
                                                selector:@selector(updateFromiCloud:) 
                                                    name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
                                                  object:nil];
-    }    
-  }
 #endif
-  
+
+  }
   return _sharedStoreManager;
 }
 
@@ -385,6 +380,28 @@ static MKStoreManager* _sharedStoreManager;
   return priceDict;
 }
 
+-(void) showAlertWithTitle:(NSString*) title message:(NSString*) message {
+  
+#if TARGET_OS_IPHONE
+  UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title
+                                                  message:message
+                                                 delegate:nil 
+                                        cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
+                                        otherButtonTitles:nil];
+  [alert show];             
+#elif TARGET_OS_MAC
+  NSAlert *alert = [[NSAlert alloc] init];
+  [alert addButtonWithTitle:NSLocalizedString(@"Dismiss", @"")];
+  
+  [alert setMessageText:title];
+  [alert setInformativeText:message];             
+  [alert setAlertStyle:NSInformationalAlertStyle];
+  
+  [alert runModal];
+  
+#endif
+}
+
 - (void) buyFeature:(NSString*) featureId
          onComplete:(void (^)(NSString*)) completionBlock         
         onCancelled:(void (^)(void)) cancelBlock
@@ -397,12 +414,8 @@ static MKStoreManager* _sharedStoreManager;
    {
      if([isAllowed boolValue])
      {
-       UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Review request approved", @"")
-                                                       message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")
-                                                      delegate:self 
-                                             cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-                                             otherButtonTitles:nil];
-       [alert show];
+       [self showAlertWithTitle:NSLocalizedString(@"Review request approved", @"")
+                        message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")];
        
        if(self.onTransactionCompleted)
          self.onTransactionCompleted(featureId);                                         
@@ -435,12 +448,8 @@ static MKStoreManager* _sharedStoreManager;
 	}
 	else
 	{
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
-                                                    message:NSLocalizedString(@"Check your parental control settings and try again later", @"")
-                                                   delegate:self 
-                                          cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-                                          otherButtonTitles: nil];
-		[alert show];
+    [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
+                     message:NSLocalizedString(@"Check your parental control settings and try again later", @"")];
 	}
 }
 
@@ -509,6 +518,11 @@ static MKStoreManager* _sharedStoreManager;
   }
 }
 
+-(NSData*) receiptFromBundle {
+  
+  return nil;
+}
+
 #pragma mark In-App purchases callbacks
 // In most cases you don't have to touch these methods
 -(void) provideContent: (NSString*) productIdentifier 
@@ -517,6 +531,9 @@ static MKStoreManager* _sharedStoreManager;
   MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
   if(subscriptionProduct)
   {                
+    // MAC In App Purchases can never be a subscription product (at least as on Dec 2011)
+    // so this can be safely ignored.
+    
     subscriptionProduct.receipt = receiptData;
     [subscriptionProduct verifyReceiptOnComplete:^(NSNumber* isActive)
      {
@@ -532,6 +549,23 @@ static MKStoreManager* _sharedStoreManager;
   }        
   else
   {
+    if(!receiptData) {
+      
+      // could be a mac in app receipt.
+      // read from receipts and verify here
+      receiptData = [self receiptFromBundle];
+      if(!receiptData) {
+        if(self.onTransactionCancelled)
+        {
+          self.onTransactionCancelled(productIdentifier);
+        }
+        else
+        {
+          NSLog(@"Receipt invalid");
+        }
+      }
+    }
+    
     if(OWN_SERVER && SERVER_PRODUCT_MODEL)
     {
       // ping server and get response before serializing the product
@@ -605,12 +639,7 @@ static MKStoreManager* _sharedStoreManager;
   NSLog(@"error: %@", transaction.error);    
 #endif
 	
-  UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[transaction.error localizedFailureReason] 
-                                                  message:[transaction.error localizedRecoverySuggestion]
-                                                 delegate:self 
-                                        cancelButtonTitle:NSLocalizedString(@"Dismiss", @"")
-                                        otherButtonTitles: nil];
-	[alert show];
+  [self showAlertWithTitle:[transaction.error localizedFailureReason]  message:[transaction.error localizedRecoverySuggestion]];
   
   if(self.onTransactionCancelled)
     self.onTransactionCancelled();

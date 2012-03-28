@@ -79,18 +79,27 @@
 }
 
 - (void) completeTransaction: (SKPaymentTransaction *)transaction
-{		
-	
+{			
+#if TARGET_OS_IPHONE
   [[MKStoreManager sharedManager] provideContent:transaction.payment.productIdentifier 
                                       forReceipt:transaction.transactionReceipt];	
+#elif TARGET_OS_MAC
+  [[MKStoreManager sharedManager] provideContent:transaction.payment.productIdentifier 
+                                      forReceipt:nil];	
+#endif
   
   [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
 }
 
 - (void) restoreTransaction: (SKPaymentTransaction *)transaction
 {	
+#if TARGET_OS_IPHONE
   [[MKStoreManager sharedManager] provideContent: transaction.originalTransaction.payment.productIdentifier
                                       forReceipt:transaction.transactionReceipt];
+#elif TARGET_OS_MAC
+  [[MKStoreManager sharedManager] provideContent: transaction.originalTransaction.payment.productIdentifier
+                                      forReceipt:nil];
+#endif
 	
   [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
 }
