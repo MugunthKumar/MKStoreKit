@@ -28,7 +28,7 @@
 - (void) failedTransaction: (SKPaymentTransaction *)transaction;
 
 - (void) provideContent: (NSString*) productIdentifier 
-			forReceipt: (NSData*) recieptData;
+             forReceipt: (NSData*) recieptData;
 @end
 
 @implementation MKStoreObserver
@@ -41,70 +41,58 @@
 		{
 			case SKPaymentTransactionStatePurchased:
 				
-                [self completeTransaction:transaction];
+        [self completeTransaction:transaction];
 				
-                break;
+        break;
 				
-            case SKPaymentTransactionStateFailed:
+      case SKPaymentTransactionStateFailed:
 				
-                [self failedTransaction:transaction];
+        [self failedTransaction:transaction];
 				
-                break;
+        break;
 				
-            case SKPaymentTransactionStateRestored:
+      case SKPaymentTransactionStateRestored:
 				
-                [self restoreTransaction:transaction];
+        [self restoreTransaction:transaction];
 				
-            default:
+      default:
 				
-                break;
+        break;
 		}			
 	}
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error
 {
-    [[MKStoreManager sharedManager] restoreFailedWithError:error];    
+  [[MKStoreManager sharedManager] restoreFailedWithError:error];    
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue 
 {
-    [[MKStoreManager sharedManager] restoreCompleted];
+  [[MKStoreManager sharedManager] restoreCompleted];
 }
 
 - (void) failedTransaction: (SKPaymentTransaction *)transaction
-{
-    if(transaction.error.code == SKErrorPaymentCancelled)
-        [[MKStoreManager sharedManager] transactionCanceled:transaction];
-    else
-        [[MKStoreManager sharedManager] failedTransaction:transaction];
-    [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
+{	
+	[[MKStoreManager sharedManager] transactionCanceled:transaction];
+  [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
 }
 
 - (void) completeTransaction: (SKPaymentTransaction *)transaction
-{			
-#if TARGET_OS_IPHONE
-    [[MKStoreManager sharedManager] provideContent:transaction.payment.productIdentifier 
-									   forReceipt:transaction.transactionReceipt];	
-#elif TARGET_OS_MAC
-    [[MKStoreManager sharedManager] provideContent:transaction.payment.productIdentifier 
-                                        forReceipt:nil];	
-#endif
-
-    [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
+{		
+	
+  [[MKStoreManager sharedManager] provideContent:transaction.payment.productIdentifier 
+                                      forReceipt:transaction.transactionReceipt];	
+  
+  [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
 }
 
 - (void) restoreTransaction: (SKPaymentTransaction *)transaction
 {	
-#if TARGET_OS_IPHONE
-    [[MKStoreManager sharedManager] provideContent: transaction.originalTransaction.payment.productIdentifier
-                                        forReceipt:transaction.transactionReceipt];
-#elif TARGET_OS_MAC
-    [[MKStoreManager sharedManager] provideContent: transaction.originalTransaction.payment.productIdentifier
-                                        forReceipt:nil];
-#endif
+  [[MKStoreManager sharedManager] provideContent: transaction.originalTransaction.payment.productIdentifier
+                                      forReceipt:transaction.transactionReceipt];
 	
-    [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
+  [[SKPaymentQueue defaultQueue] finishTransaction: transaction];	
 }
 
 @end

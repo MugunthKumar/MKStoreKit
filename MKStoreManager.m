@@ -181,7 +181,7 @@ static MKStoreManager* _sharedStoreManager;
 #if TARGET_IPHONE_SIMULATOR
   NSLog(@"You are running in iOS Simulator. MKStoreKit runs only on devices");
 #else
-
+  
 	if(!_sharedStoreManager) {
 		static dispatch_once_t oncePredicate;
 		dispatch_once(&oncePredicate, ^{
@@ -199,10 +199,10 @@ static MKStoreManager* _sharedStoreManager;
                                                selector:@selector(updateFromiCloud:) 
                                                    name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
                                                  object:nil];
-    }
-    
-#endif
+    }    
   }
+#endif
+  
   return _sharedStoreManager;
 }
 

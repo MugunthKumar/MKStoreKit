@@ -38,12 +38,12 @@
 
 @property (nonatomic, copy) void (^onSubscriptionVerificationFailed)();
 @property (nonatomic, copy) void (^onSubscriptionVerificationCompleted)(NSNumber* isActive);
-@property (nonatomic, strong) NSData *receipt;
-@property (nonatomic, strong) NSDictionary *verifiedReceiptDictionary;
+@property (nonatomic, retain) NSData *receipt;
+@property (nonatomic, retain) NSDictionary *verifiedReceiptDictionary;
 @property (nonatomic, assign) int subscriptionDays; 
-@property (nonatomic, strong) NSString *productId;
-@property (nonatomic, strong) NSURLConnection *theConnection;
-@property (nonatomic, strong) NSMutableData *dataFromConnection;
+@property (nonatomic, retain) NSString *productId;
+@property (nonatomic, retain) NSURLConnection *theConnection;
+@property (nonatomic, retain) NSMutableData *dataFromConnection;
 
 
 - (void) verifyReceiptOnComplete:(void (^)(NSNumber*)) completionBlock

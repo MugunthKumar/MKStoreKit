@@ -38,11 +38,11 @@
 @property (nonatomic, copy) void (^onReceiptVerificationSucceeded)();
 @property (nonatomic, copy) void (^onReceiptVerificationFailed)();
 
-@property (nonatomic, strong) NSData *receipt;
+@property (nonatomic, retain) NSData *receipt;
 
-@property (nonatomic, strong) NSString *productId;
-@property (nonatomic, strong) NSURLConnection *theConnection;
-@property (nonatomic, strong) NSMutableData *dataFromConnection;
+@property (nonatomic, retain) NSString *productId;
+@property (nonatomic, retain) NSURLConnection *theConnection;
+@property (nonatomic, retain) NSMutableData *dataFromConnection;
 
 - (void) verifyReceiptOnComplete:(void (^)(void)) completionBlock
                          onError:(void (^)(NSError*)) errorBlock;
