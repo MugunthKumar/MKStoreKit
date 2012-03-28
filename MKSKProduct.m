@@ -53,7 +53,9 @@ static NSMutableData *sDataFromConnection;
   if (uuid)
     uniqueID = (NSString *)uuid;
   else {
-    CFStringRef cfUuid = CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
+    CFUUIDRef cfUuid = CFUUIDCreate(NULL);
+    CFStringRef cfUuid = CFUUIDCreateString(NULL, cfUuid);
+    CFRelease(cfUuid);
     uniqueID = (__bridge NSString *)cfUuid;
     CFRelease(cfUuid);
     [defaults setObject:uniqueID forKey:@"uniqueID"];
