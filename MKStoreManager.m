@@ -178,9 +178,6 @@ static MKStoreManager* _sharedStoreManager;
 + (MKStoreManager*)sharedManager
 {
 	if(!_sharedStoreManager) {
-#if TARGET_IPHONE_SIMULATOR
-    NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
-#else
 		static dispatch_once_t oncePredicate;
 		dispatch_once(&oncePredicate, ^{      
 			_sharedStoreManager = [[self alloc] init];            
@@ -195,21 +192,10 @@ static MKStoreManager* _sharedStoreManager;
                                                selector:@selector(updateFromiCloud:) 
                                                    name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
                                                  object:nil];
-#endif
+
 
   }
   return _sharedStoreManager;
-}
-
-+ (id)allocWithZone:(NSZone *)zone
-{	
-  return [self sharedManager];
-}
-
-
-- (id)copyWithZone:(NSZone *)zone
-{
-  return self;	
 }
 
 #pragma mark Internal MKStoreKit functions
