@@ -1,11 +1,10 @@
 //
 //  MKSKProduct.m
-//  MKStoreKitDemo
-//  Version 4.1
+//  MKStoreKit (Version 4.2)
 //
 //  Created by Mugunth on 04/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
-
+//
 //  Licensing (Zlib)
 //  This software is provided 'as-is', without any express or implied
 //  warranty.  In no event will the authors be held liable for any damages

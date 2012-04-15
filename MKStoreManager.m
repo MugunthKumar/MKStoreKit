@@ -1,10 +1,9 @@
 //
 //  MKStoreManager.m
-//  MKStoreKit (Version 4.0)
+//  MKStoreKit (Version 4.2)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
-//  Version 4.1
-//  Copyright 2010 Steinlogic. All rights reserved.
+//  Copyright 2012 Steinlogic. All rights reserved.
 //	File created using Singleton XCode Template by Mugunth Kumar (http://mugunthkumar.com
 //  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
 //  Read my blog post at http://mk.sg/1m on how to use this code
@@ -37,6 +36,7 @@
 #import "SFHFKeychainUtils.h"
 #import "MKSKSubscriptionProduct.h"
 #import "MKSKProduct.h"
+#import "NSData+Base64.h"
 
 @interface MKStoreManager () //private methods and properties
 
@@ -125,28 +125,42 @@ static MKStoreManager* _sharedStoreManager;
 
 +(void) setObject:(id) object forKey:(NSString*) key
 {
-  NSString *objectString = nil;
-  if([object isKindOfClass:[NSData class]])
-  {
-    objectString = [[NSString alloc] initWithData:object encoding:NSUTF8StringEncoding];
-  }
-  if([object isKindOfClass:[NSNumber class]])
-  {       
-    objectString = [(NSNumber*)object stringValue];
-  }
   NSError *error = nil;
-  [SFHFKeychainUtils storeUsername:key 
-                       andPassword:objectString
-                    forServiceName:@"MKStoreKit"
-                    updateExisting:YES 
-                             error:&error];
   
-  if(error)
-    NSLog(@"%@", [error localizedDescription]);
-  
-  if([self iCloudAvailable]) {
-    [[NSUbiquitousKeyValueStore defaultStore] setObject:objectString forKey:key];
-    [[NSUbiquitousKeyValueStore defaultStore] synchronize];
+  if(object) {
+    NSString *objectString = nil;
+    if([object isKindOfClass:[NSData class]])
+    {
+      objectString = [[NSString alloc] initWithData:object encoding:NSUTF8StringEncoding];
+    }
+    if([object isKindOfClass:[NSNumber class]])
+    {       
+      objectString = [(NSNumber*)object stringValue];
+    }
+    [SFHFKeychainUtils storeUsername:key 
+                         andPassword:objectString
+                      forServiceName:@"MKStoreKit"
+                      updateExisting:YES 
+                               error:&error];
+    
+    if(error)
+      NSLog(@"%@", [error localizedDescription]);
+    
+    if([self iCloudAvailable]) {
+      [[NSUbiquitousKeyValueStore defaultStore] setObject:objectString forKey:key];
+      [[NSUbiquitousKeyValueStore defaultStore] synchronize];
+    }
+  } else {
+    [SFHFKeychainUtils deleteItemForUsername:key 
+                              andServiceName:@"MKStoreKit" 
+                                       error:&error];
+    if(error)
+      NSLog(@"%@", [error localizedDescription]);
+    
+    if([self iCloudAvailable]) {
+      [[NSUbiquitousKeyValueStore defaultStore] removeObjectForKey:key];
+      [[NSUbiquitousKeyValueStore defaultStore] synchronize];
+    }
   }
 }
 
@@ -307,7 +321,29 @@ static MKStoreManager* _sharedStoreManager;
 - (BOOL) isSubscriptionActive:(NSString*) featureId
 {    
   MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:featureId];
-  return [subscriptionProduct isSubscriptionActive];
+  if(!subscriptionProduct.receipt) return NO;
+  
+  NSPropertyListFormat plistFormat;
+  NSDictionary *payloadDict = [NSPropertyListSerialization propertyListWithData:subscriptionProduct.receipt 
+                                                                        options:NSPropertyListImmutable 
+                                                                         format:&plistFormat 
+                                                                          error:nil];  
+  
+  NSData *receiptData = [NSData dataFromBase64String:[payloadDict objectForKey:@"purchase-info"]];
+  
+  if(!subscriptionProduct.receipt) {
+    
+    NSLog(@"Invalid receipt data: %@", receiptData);
+    return NO;
+  }
+  
+  NSDictionary *receiptDict = [NSPropertyListSerialization propertyListWithData:receiptData
+                                                                        options:NSPropertyListImmutable 
+                                                                         format:&plistFormat 
+                                                                          error:nil];  
+  
+  NSTimeInterval expiresDate = [[receiptDict objectForKey:@"expires-date"] doubleValue]/1000.0f;
+  return expiresDate > [[NSDate date] timeIntervalSince1970];
 }
 
 // Call this function to populate your UI
@@ -488,6 +524,9 @@ static MKStoreManager* _sharedStoreManager;
                                                                object:product.productId];
            
            NSLog(@"Subscription: %@ is inactive", product.productId);
+           product.receipt = nil;
+           [self.subscriptionProducts setObject:product forKey:productId];
+           [MKStoreManager setObject:nil forKey:product.productId];
          }
          else
          {
@@ -526,7 +565,9 @@ static MKStoreManager* _sharedStoreManager;
        [[NSNotificationCenter defaultCenter] postNotificationName:kSubscriptionsPurchasedNotification 
                                                            object:productIdentifier];
        
-       [MKStoreManager setObject:receiptData forKey:productIdentifier];             
+       [MKStoreManager setObject:receiptData forKey:productIdentifier];      
+       if(self.onTransactionCompleted)
+         self.onTransactionCompleted(productIdentifier);
      }
                                          onError:^(NSError* error)
      {

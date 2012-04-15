@@ -1,13 +1,10 @@
 //
 //  MKStoreObserver.h
-//  MKStoreKit (Version 4.0)
+//  MKStoreKit (Version 4.2)
 //
 //  Created by Mugunth Kumar on 17-Nov-2010.
-//  Version 4.1
-//  Copyright 2010 Steinlogic. All rights reserved.
-//	File created using Singleton XCode Template by Mugunth Kumar (http://mugunthkumar.com
-//  Permission granted to do anything, commercial/non-commercial with this file apart from removing the line/URL above
-
+//  Copyright 2012 Steinlogic. All rights reserved.
+//
 //  Licensing (Zlib)
 //  This software is provided 'as-is', without any express or implied
 //  warranty.  In no event will the authors be held liable for any damages

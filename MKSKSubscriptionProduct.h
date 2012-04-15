@@ -1,11 +1,10 @@
 //
 //  MKSKSubscriptionProduct.h
-//  MKStoreKitDemo
-//  Version 4.1
+//  MKStoreKit (Version 4.2)
 //
 //  Created by Mugunth on 03/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
-
+//
 //  Licensing (Zlib)
 //  This software is provided 'as-is', without any express or implied
 //  warranty.  In no event will the authors be held liable for any damages
@@ -39,7 +38,7 @@
 @property (nonatomic, copy) void (^onSubscriptionVerificationFailed)();
 @property (nonatomic, copy) void (^onSubscriptionVerificationCompleted)(NSNumber* isActive);
 @property (nonatomic, strong) NSData *receipt;
-@property (nonatomic, strong) NSDictionary *verifiedReceiptDictionary;
+@property (nonatomic, readonly) NSDictionary *verifiedReceiptDictionary;
 @property (nonatomic, assign) int subscriptionDays; 
 @property (nonatomic, strong) NSString *productId;
 @property (nonatomic, strong) NSURLConnection *theConnection;

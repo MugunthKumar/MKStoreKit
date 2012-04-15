@@ -1,11 +1,10 @@
 //
 //  MKSKSubscriptionProduct.m
-//  MKStoreKitDemo
-//  Version 4.1
+//  MKStoreKit (Version 4.2)
 //
 //  Created by Mugunth on 03/07/11.
 //  Copyright 2011 Steinlogic. All rights reserved.
-
+//
 //  Licensing (Zlib)
 //  This software is provided 'as-is', without any express or implied
 //  warranty.  In no event will the authors be held liable for any damages
@@ -41,7 +40,6 @@
 @synthesize theConnection;
 @synthesize dataFromConnection;
 @synthesize productId;
-@synthesize verifiedReceiptDictionary;
 
 -(id) initWithProductId:(NSString*) aProductId subscriptionDays:(int) days
 {
@@ -76,12 +74,13 @@
 	
 	[theRequest setHTTPBody:[receiptString dataUsingEncoding:NSUTF8StringEncoding]];
 	
-  self.theConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];    
+  self.theConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];  
   [self.theConnection start];    
 }
 
 -(BOOL) isSubscriptionActive
 {    
+  if(!self.receipt) return NO;
   if([[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"]){
     
     NSTimeInterval expiresDate = [[[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"expires_date"] doubleValue]/1000.0;        
@@ -91,7 +90,7 @@
     
     NSString *purchasedDateString = [[self.verifiedReceiptDictionary objectForKey:@"receipt"] objectForKey:@"purchase_date"];        
     if(!purchasedDateString) {
-      NSLog(@"Receipt Dictionary from Apple Server is invalid: %@", verifiedReceiptDictionary);
+      NSLog(@"Receipt Dictionary from Apple Server is invalid: %@", self.verifiedReceiptDictionary);
       return NO;
     }
     NSDateFormatter *df = [[NSDateFormatter alloc] init];
@@ -123,9 +122,14 @@ didReceiveResponse:(NSURLResponse *)response
 	[self.dataFromConnection appendData:data];
 }
 
+-(NSDictionary*) verifiedReceiptDictionary {
+  
+  return [self.receipt objectFromJSONData];
+}
+
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-  self.verifiedReceiptDictionary = [[self.dataFromConnection copy] objectFromJSONData];                                              
+  self.receipt = [self.dataFromConnection copy];
   if(self.onSubscriptionVerificationCompleted)
   {
     self.onSubscriptionVerificationCompleted([NSNumber numberWithBool:[self isSubscriptionActive]]);
