@@ -31,6 +31,7 @@
 
 #import "MKSKSubscriptionProduct.h"
 #import "NSData+Base64.h"
+#import "JSONKit.h"
 
 @implementation MKSKSubscriptionProduct
 @synthesize onSubscriptionVerificationFailed;

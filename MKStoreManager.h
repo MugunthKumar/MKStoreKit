@@ -36,7 +36,6 @@
 #import <StoreKit/StoreKit.h>
 #import "MKStoreObserver.h"
 #import "MKStoreKitConfigs.h"
-#import "JSONKit.h"
 
 #define kReceiptStringKey @"MK_STOREKIT_RECEIPTS_STRING"
 
