@@ -37,6 +37,9 @@
 #import "MKSKSubscriptionProduct.h"
 #import "MKSKProduct.h"
 #import "NSData+Base64.h"
+#if ! __has_feature(objc_arc)
+#error MKNetworkKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#endif
 
 @interface MKStoreManager () //private methods and properties
 

@@ -17,6 +17,9 @@
 
 #import "MKStoreObserver.h"
 #import "MKStoreManager.h"
+#if ! __has_feature(objc_arc)
+#error MKNetworkKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#endif
 
 @interface MKStoreManager (InternalMethods)
 
