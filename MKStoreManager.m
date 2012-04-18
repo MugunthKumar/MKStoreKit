@@ -107,22 +107,6 @@ static MKStoreManager* _sharedStoreManager;
   return NO;
 }
 
-- (void)dealloc {
-  
-  _purchasableObjects = nil;
-  _storeObserver = nil;
-  onTransactionCancelled = nil;
-  onTransactionCompleted = nil;
-  onRestoreFailed = nil;
-  onRestoreCompleted = nil;    
-}
-
-+ (void) dealloc
-{
-	_sharedStoreManager = nil;
-	[super dealloc];
-}
-
 +(void) setObject:(id) object forKey:(NSString*) key
 {
   NSError *error = nil;
