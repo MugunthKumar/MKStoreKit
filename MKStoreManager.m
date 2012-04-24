@@ -44,7 +44,7 @@
 @interface MKStoreManager () //private methods and properties
 
 @property (nonatomic, copy) void (^onTransactionCancelled)();
-@property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId);
+@property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId, NSData* receiptData);
 
 @property (nonatomic, copy) void (^onRestoreFailed)(NSError* error);
 @property (nonatomic, copy) void (^onRestoreCompleted)();
@@ -412,7 +412,7 @@ static MKStoreManager* _sharedStoreManager;
 }
 
 - (void) buyFeature:(NSString*) featureId
-         onComplete:(void (^)(NSString*)) completionBlock         
+         onComplete:(void (^)(NSString*, NSData*)) completionBlock         
         onCancelled:(void (^)(void)) cancelBlock
 {
   self.onTransactionCompleted = completionBlock;
@@ -427,7 +427,7 @@ static MKStoreManager* _sharedStoreManager;
                         message:NSLocalizedString(@"You can use this feature for reviewing the app.", @"")];
        
        if(self.onTransactionCompleted)
-         self.onTransactionCompleted(featureId);                                         
+         self.onTransactionCompleted(featureId, nil);                                         
      }
      else
      {
@@ -554,7 +554,7 @@ static MKStoreManager* _sharedStoreManager;
        
        [MKStoreManager setObject:receiptData forKey:productIdentifier];      
        if(self.onTransactionCompleted)
-         self.onTransactionCompleted(productIdentifier);
+         self.onTransactionCompleted(productIdentifier, receiptData);
      }
                                          onError:^(NSError* error)
      {
@@ -607,7 +607,7 @@ static MKStoreManager* _sharedStoreManager;
     {
       [self rememberPurchaseOfProduct:productIdentifier];
       if(self.onTransactionCompleted)
-        self.onTransactionCompleted(productIdentifier);
+        self.onTransactionCompleted(productIdentifier, receiptData);
     }                
   }
 }
