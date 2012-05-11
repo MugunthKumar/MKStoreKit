@@ -217,8 +217,8 @@ static MKStoreManager* _sharedStoreManager;
            @"MKStoreKitConfigs.plist"]];
 }
 
-- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
-                                       onError:(void (^)(NSError*)) errorBlock
+- (void) restorePreviousTransactionsOnComplete:(RestoreCompletionBlock) completionBlock
+                                       onError:(RestoreErrorBlock) errorBlock
 {
   self.onRestoreCompleted = completionBlock;
   self.onRestoreFailed = errorBlock;
@@ -421,8 +421,8 @@ static MKStoreManager* _sharedStoreManager;
 }
 
 - (void) buyFeature:(NSString*) featureId
-         onComplete:(void (^)(NSString*, NSData*)) completionBlock         
-        onCancelled:(void (^)(void)) cancelBlock
+         onComplete:(BuyCompletionBlock) completionBlock
+        onCancelled:(BuyCancelBlock) cancelBlock
 {
   self.onTransactionCompleted = completionBlock;
   self.onTransactionCancelled = cancelBlock;
