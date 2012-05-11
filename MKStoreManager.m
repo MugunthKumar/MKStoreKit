@@ -55,6 +55,8 @@
 @property (nonatomic, strong) MKStoreObserver *storeObserver;
 @property (nonatomic, assign, getter=isProductsAvailable) BOOL isProductsAvailable;
 
+@property (nonatomic, strong) SKProductsRequest *productsRequest;
+
 - (void) requestProductData;
 - (void) startVerifyingSubscriptionReceipts;
 -(void) rememberPurchaseOfProduct:(NSString*) productIdentifier withReceipt:(NSData*) receiptData;
@@ -73,6 +75,8 @@
 @synthesize onTransactionCompleted;
 @synthesize onRestoreFailed;
 @synthesize onRestoreCompleted;
+
+@synthesize productsRequest;
 
 static MKStoreManager* _sharedStoreManager;
 
@@ -251,9 +255,9 @@ static MKStoreManager* _sharedStoreManager;
   [productsArray addObjectsFromArray:nonConsumables];
   [productsArray addObjectsFromArray:subscriptions];
   
-	SKProductsRequest *request= [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
-	request.delegate = self;
-	[request start];
+	self.productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
+	self.productsRequest.delegate = self;
+	[self.productsRequest start];
 }
 - (BOOL) removeAllKeychainData {
   NSMutableArray *productsArray = [NSMutableArray array];
@@ -299,6 +303,7 @@ static MKStoreManager* _sharedStoreManager;
 	isProductsAvailable = YES;    
   [[NSNotificationCenter defaultCenter] postNotificationName:kProductFetchedNotification 
                                                       object:[NSNumber numberWithBool:isProductsAvailable]];
+	self.productsRequest = nil;
 }
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
@@ -306,6 +311,7 @@ static MKStoreManager* _sharedStoreManager;
 	isProductsAvailable = NO;	
   [[NSNotificationCenter defaultCenter] postNotificationName:kProductFetchedNotification 
                                                       object:[NSNumber numberWithBool:isProductsAvailable]];
+	self.productsRequest = nil;
 }
 
 // call this function to check if the user has already purchased your feature
