@@ -30,7 +30,7 @@
 
 #import "MKSKProduct.h"
 #if ! __has_feature(objc_arc)
-#error MKNetworkKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 
 static void (^onReviewRequestVerificationSucceeded)();

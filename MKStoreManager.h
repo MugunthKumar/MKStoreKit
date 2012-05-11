@@ -76,6 +76,7 @@
 //for testing proposes you can use this method to remove all the saved keychain data (saved purchases, etc.)
 - (BOOL) removeAllKeychainData;
 
++(id) receiptForKey:(NSString*) key;
 +(void) setObject:(id) object forKey:(NSString*) key;
 +(NSNumber*) numberForKey:(NSString*) key;
 

@@ -38,7 +38,7 @@
 #import "MKSKProduct.h"
 #import "NSData+Base64.h"
 #if ! __has_feature(objc_arc)
-#error MKNetworkKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 
 @interface MKStoreManager () //private methods and properties
@@ -57,7 +57,7 @@
 
 - (void) requestProductData;
 - (void) startVerifyingSubscriptionReceipts;
--(void) rememberPurchaseOfProduct:(NSString*) productIdentifier;
+-(void) rememberPurchaseOfProduct:(NSString*) productIdentifier withReceipt:(NSData*) receiptData;
 -(void) addToQueue:(NSString*) productId;
 @end
 
@@ -149,6 +149,15 @@ static MKStoreManager* _sharedStoreManager;
       [[NSUbiquitousKeyValueStore defaultStore] synchronize];
     }
   }
+}
+
++(id) receiptForKey:(NSString*) key {
+  
+  NSData *receipt = [MKStoreManager objectForKey:key];
+  if(!receipt)
+    receipt = [MKStoreManager objectForKey:[NSString stringWithFormat:@"%@-receipt", key]];
+  
+  return receipt;               
 }
 
 +(id) objectForKey:(NSString*) key
@@ -589,7 +598,7 @@ static MKStoreManager* _sharedStoreManager;
       
       [thisProduct verifyReceiptOnComplete:^
        {
-         [self rememberPurchaseOfProduct:productIdentifier];
+         [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
        }
                                    onError:^(NSError* error)
        {
@@ -605,7 +614,7 @@ static MKStoreManager* _sharedStoreManager;
     }
     else
     {
-      [self rememberPurchaseOfProduct:productIdentifier];
+      [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
       if(self.onTransactionCompleted)
         self.onTransactionCompleted(productIdentifier, receiptData);
     }                
@@ -613,7 +622,7 @@ static MKStoreManager* _sharedStoreManager;
 }
 
 
--(void) rememberPurchaseOfProduct:(NSString*) productIdentifier
+-(void) rememberPurchaseOfProduct:(NSString*) productIdentifier withReceipt:(NSData*) receiptData
 {
   NSDictionary *allConsumables = [[self storeKitItems] objectForKey:@"Consumables"];
   if([[allConsumables allKeys] containsObject:productIdentifier])
@@ -631,6 +640,8 @@ static MKStoreManager* _sharedStoreManager;
   {
     [MKStoreManager setObject:[NSNumber numberWithBool:YES] forKey:productIdentifier];	
   }
+
+  [MKStoreManager setObject:receiptData forKey:[NSString stringWithFormat:@"%@-receipt", productIdentifier]];	
 }
 
 - (void) transactionCanceled: (SKPaymentTransaction *)transaction
