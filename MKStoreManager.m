@@ -43,11 +43,11 @@
 
 @interface MKStoreManager () //private methods and properties
 
-@property (nonatomic, copy) void (^onTransactionCancelled)();
-@property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId, NSData* receiptData);
+@property (nonatomic, copy) BuyCancelBlock onTransactionCancelled;
+@property (nonatomic, copy) BuyCompletionBlock onTransactionCompleted;
 
-@property (nonatomic, copy) void (^onRestoreFailed)(NSError* error);
-@property (nonatomic, copy) void (^onRestoreCompleted)();
+@property (nonatomic, copy) RestoreErrorBlock onRestoreFailed;
+@property (nonatomic, copy) RestoreCompletionBlock onRestoreCompleted;
 
 @property (nonatomic, strong) NSMutableArray *purchasableObjects;
 @property (nonatomic, strong) NSMutableDictionary *subscriptionProducts;
@@ -580,7 +580,7 @@ static MKStoreManager* _sharedStoreManager;
       if(!receiptData) {
         if(self.onTransactionCancelled)
         {
-          self.onTransactionCancelled(productIdentifier);
+          self.onTransactionCancelled();
         }
         else
         {
@@ -604,7 +604,7 @@ static MKStoreManager* _sharedStoreManager;
        {
          if(self.onTransactionCancelled)
          {
-           self.onTransactionCancelled(productIdentifier);
+           self.onTransactionCancelled();
          }
          else
          {
