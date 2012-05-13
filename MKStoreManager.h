@@ -63,12 +63,12 @@
 
 // use this method to invoke a purchase
 - (void) buyFeature:(NSString*) featureId
-         onComplete:(void (^)(NSString*, NSData*)) completionBlock         
+         onComplete:(void (^)(NSString* purchasedFeature, NSData*purchasedReceipt)) completionBlock         
         onCancelled:(void (^)(void)) cancelBlock;
 
 // use this method to restore a purchase
 - (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
-                                       onError:(void (^)(NSError*)) errorBlock;
+                                       onError:(void (^)(NSError* error)) errorBlock;
 
 - (BOOL) canConsumeProduct:(NSString*) productName quantity:(int) quantity;
 - (BOOL) consumeProduct:(NSString*) productName quantity:(int) quantity;
