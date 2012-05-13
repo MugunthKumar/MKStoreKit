@@ -43,11 +43,11 @@
 
 @interface MKStoreManager () //private methods and properties
 
-@property (nonatomic, copy) void (^onTransactionCancelled)();
-@property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId, NSData* receiptData);
+@property (nonatomic, copy) BuyCancelBlock onTransactionCancelled;
+@property (nonatomic, copy) BuyCompletionBlock onTransactionCompleted;
 
-@property (nonatomic, copy) void (^onRestoreFailed)(NSError* error);
-@property (nonatomic, copy) void (^onRestoreCompleted)();
+@property (nonatomic, copy) RestoreErrorBlock onRestoreFailed;
+@property (nonatomic, copy) RestoreCompletionBlock onRestoreCompleted;
 
 @property (nonatomic, strong) NSMutableArray *purchasableObjects;
 @property (nonatomic, strong) NSMutableDictionary *subscriptionProducts;
@@ -217,8 +217,8 @@ static MKStoreManager* _sharedStoreManager;
            @"MKStoreKitConfigs.plist"]];
 }
 
-- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
-                                       onError:(void (^)(NSError*)) errorBlock
+- (void) restorePreviousTransactionsOnComplete:(RestoreCompletionBlock) completionBlock
+                                       onError:(RestoreErrorBlock) errorBlock
 {
   self.onRestoreCompleted = completionBlock;
   self.onRestoreFailed = errorBlock;
@@ -417,8 +417,8 @@ static MKStoreManager* _sharedStoreManager;
 }
 
 - (void) buyFeature:(NSString*) featureId
-         onComplete:(void (^)(NSString*, NSData*)) completionBlock         
-        onCancelled:(void (^)(void)) cancelBlock
+         onComplete:(BuyCompletionBlock) completionBlock
+        onCancelled:(BuyCancelBlock) cancelBlock
 {
   self.onTransactionCompleted = completionBlock;
   self.onTransactionCancelled = cancelBlock;
@@ -576,7 +576,7 @@ static MKStoreManager* _sharedStoreManager;
       if(!receiptData) {
         if(self.onTransactionCancelled)
         {
-          self.onTransactionCancelled(productIdentifier);
+          self.onTransactionCancelled();
         }
         else
         {
@@ -600,7 +600,7 @@ static MKStoreManager* _sharedStoreManager;
        {
          if(self.onTransactionCancelled)
          {
-           self.onTransactionCancelled(productIdentifier);
+           self.onTransactionCancelled();
          }
          else
          {

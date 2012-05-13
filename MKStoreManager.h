@@ -52,6 +52,12 @@
 
 @interface MKStoreManager : NSObject<SKProductsRequestDelegate>
 
+typedef void (^BuyCompletionBlock)(NSString *featureId, NSData *receiptData);
+typedef void (^BuyCancelBlock)(void);
+
+typedef void (^RestoreCompletionBlock)(void);
+typedef void (^RestoreErrorBlock)(NSError *error);
+
 // These are the methods you will be using in your app
 + (MKStoreManager*)sharedManager;
 
@@ -63,12 +69,12 @@
 
 // use this method to invoke a purchase
 - (void) buyFeature:(NSString*) featureId
-         onComplete:(void (^)(NSString*, NSData*)) completionBlock         
-        onCancelled:(void (^)(void)) cancelBlock;
+         onComplete:(BuyCompletionBlock) completionBlock
+        onCancelled:(BuyCancelBlock) cancelBlock;
 
 // use this method to restore a purchase
-- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
-                                       onError:(void (^)(NSError*)) errorBlock;
+- (void) restorePreviousTransactionsOnComplete:(RestoreCompletionBlock) completionBlock
+                                       onError:(RestoreErrorBlock) errorBlock;
 
 - (BOOL) canConsumeProduct:(NSString*) productName quantity:(int) quantity;
 - (BOOL) consumeProduct:(NSString*) productName quantity:(int) quantity;
