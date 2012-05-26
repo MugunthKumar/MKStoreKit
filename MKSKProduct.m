@@ -29,11 +29,13 @@
 //	4) A paypal donation to mugunth.kumar@gmail.com
 
 #import "MKSKProduct.h"
+#import "NSData+Base64.h"
+
 #if ! __has_feature(objc_arc)
 #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 
-static void (^onReviewRequestVerificationSucceeded)();
+static void (^onReviewRequestVerificationSucceeded)(NSNumber *allowed);
 static void (^onReviewRequestVerificationFailed)();
 static NSURLConnection *sConnection;
 static NSMutableData *sDataFromConnection;
@@ -181,10 +183,7 @@ static NSMutableData *sDataFromConnection;
 	[theRequest setHTTPMethod:@"POST"];		
 	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
 	
-	NSString *receiptDataString = [[NSString alloc] initWithData:self.receipt 
-                                                      encoding:NSASCIIStringEncoding];
-  
-	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", receiptDataString];
+	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", [self.receipt base64EncodedString]];
 	
 	NSString *length = [NSString stringWithFormat:@"%d", [postData length]];	
 	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
@@ -269,26 +268,14 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSString *responseString = [[NSString alloc] initWithData:sDataFromConnection 
                                                    encoding:NSASCIIStringEncoding];
-	
-  sDataFromConnection = nil;
-  
-	if([responseString isEqualToString:@"YES"])		
-	{
+
+    sDataFromConnection = nil;
+    
     if(onReviewRequestVerificationSucceeded)
     {
-      onReviewRequestVerificationSucceeded();
-      onReviewRequestVerificationFailed = nil;
+        onReviewRequestVerificationSucceeded([NSNumber numberWithBool:[responseString isEqualToString:@"YES"]]);
+        onReviewRequestVerificationSucceeded = nil;
     }
-	}
-  else
-  {
-    if(onReviewRequestVerificationFailed)
-      onReviewRequestVerificationFailed(nil);
-    
-    onReviewRequestVerificationFailed = nil;
-  }
-	
-  
 }
 
 + (void)connection:(NSURLConnection *)connection
