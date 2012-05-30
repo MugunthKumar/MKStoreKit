@@ -470,6 +470,10 @@ static MKStoreManager* _sharedStoreManager;
 	{
     [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
                      message:NSLocalizedString(@"Check your parental control settings and try again later", @"")];
+		if (self.onTransactionCancelled)
+		{
+			self.onTransactionCancelled();
+		}
 	}
 }
 
