@@ -1,0 +1,425 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		30C1653614A12D1100A61D42 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1653514A12D1100A61D42 /* Foundation.framework */; };
+		30C1653C14A12D1100A61D42 /* VirtualCurrencyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 30C1653B14A12D1100A61D42 /* VirtualCurrencyManager.m */; };
+		30C1654414A12D1200A61D42 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1654314A12D1200A61D42 /* SenTestingKit.framework */; };
+		30C1654614A12D1200A61D42 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1654514A12D1200A61D42 /* UIKit.framework */; };
+		30C1654714A12D1200A61D42 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1653514A12D1100A61D42 /* Foundation.framework */; };
+		30C1654A14A12D1200A61D42 /* libVirtualCurrencyManager.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1653214A12D1100A61D42 /* libVirtualCurrencyManager.a */; };
+		30C1655014A12D1200A61D42 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 30C1654E14A12D1200A61D42 /* InfoPlist.strings */; };
+		30C1655314A12D1200A61D42 /* VirtualCurrencyManagerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 30C1655214A12D1200A61D42 /* VirtualCurrencyManagerTests.m */; };
+		30C1655F14A12E0400A61D42 /* SFHFKeychainUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 30C1655D14A12E0400A61D42 /* SFHFKeychainUtils.h */; };
+		30C1656014A12E0400A61D42 /* SFHFKeychainUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 30C1655E14A12E0400A61D42 /* SFHFKeychainUtils.m */; };
+		30C1656214A12EE800A61D42 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1656114A12EE800A61D42 /* Security.framework */; };
+		30C1656314A12F0700A61D42 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C1656114A12EE800A61D42 /* Security.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		30C1654814A12D1200A61D42 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 30C1652914A12D1000A61D42 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 30C1653114A12D1100A61D42;
+			remoteInfo = VirtualCurrencyManager;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		30C1653214A12D1100A61D42 /* libVirtualCurrencyManager.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libVirtualCurrencyManager.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		30C1653514A12D1100A61D42 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		30C1653914A12D1100A61D42 /* VirtualCurrencyManager-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VirtualCurrencyManager-Prefix.pch"; sourceTree = "<group>"; };
+		30C1653A14A12D1100A61D42 /* VirtualCurrencyManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VirtualCurrencyManager.h; sourceTree = "<group>"; };
+		30C1653B14A12D1100A61D42 /* VirtualCurrencyManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VirtualCurrencyManager.m; sourceTree = "<group>"; };
+		30C1654214A12D1200A61D42 /* VirtualCurrencyManagerTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VirtualCurrencyManagerTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		30C1654314A12D1200A61D42 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		30C1654514A12D1200A61D42 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		30C1654D14A12D1200A61D42 /* VirtualCurrencyManagerTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "VirtualCurrencyManagerTests-Info.plist"; sourceTree = "<group>"; };
+		30C1654F14A12D1200A61D42 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		30C1655114A12D1200A61D42 /* VirtualCurrencyManagerTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VirtualCurrencyManagerTests.h; sourceTree = "<group>"; };
+		30C1655214A12D1200A61D42 /* VirtualCurrencyManagerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VirtualCurrencyManagerTests.m; sourceTree = "<group>"; };
+		30C1655D14A12E0400A61D42 /* SFHFKeychainUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SFHFKeychainUtils.h; path = ../Externals/SFHFKeychainUtils.h; sourceTree = "<group>"; };
+		30C1655E14A12E0400A61D42 /* SFHFKeychainUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SFHFKeychainUtils.m; path = ../Externals/SFHFKeychainUtils.m; sourceTree = "<group>"; };
+		30C1656114A12EE800A61D42 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		30C1652F14A12D1100A61D42 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30C1656214A12EE800A61D42 /* Security.framework in Frameworks */,
+				30C1653614A12D1100A61D42 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30C1653E14A12D1200A61D42 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30C1656314A12F0700A61D42 /* Security.framework in Frameworks */,
+				30C1654414A12D1200A61D42 /* SenTestingKit.framework in Frameworks */,
+				30C1654614A12D1200A61D42 /* UIKit.framework in Frameworks */,
+				30C1654714A12D1200A61D42 /* Foundation.framework in Frameworks */,
+				30C1654A14A12D1200A61D42 /* libVirtualCurrencyManager.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		30C1652714A12D1000A61D42 = {
+			isa = PBXGroup;
+			children = (
+				30C1656114A12EE800A61D42 /* Security.framework */,
+				30C1653714A12D1100A61D42 /* VirtualCurrencyManager */,
+				30C1655C14A12DEA00A61D42 /* libs */,
+				30C1654B14A12D1200A61D42 /* VirtualCurrencyManagerTests */,
+				30C1653414A12D1100A61D42 /* Frameworks */,
+				30C1653314A12D1100A61D42 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		30C1653314A12D1100A61D42 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				30C1653214A12D1100A61D42 /* libVirtualCurrencyManager.a */,
+				30C1654214A12D1200A61D42 /* VirtualCurrencyManagerTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		30C1653414A12D1100A61D42 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				30C1653514A12D1100A61D42 /* Foundation.framework */,
+				30C1654314A12D1200A61D42 /* SenTestingKit.framework */,
+				30C1654514A12D1200A61D42 /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		30C1653714A12D1100A61D42 /* VirtualCurrencyManager */ = {
+			isa = PBXGroup;
+			children = (
+				30C1653A14A12D1100A61D42 /* VirtualCurrencyManager.h */,
+				30C1653B14A12D1100A61D42 /* VirtualCurrencyManager.m */,
+				30C1653814A12D1100A61D42 /* Supporting Files */,
+			);
+			path = VirtualCurrencyManager;
+			sourceTree = "<group>";
+		};
+		30C1653814A12D1100A61D42 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				30C1653914A12D1100A61D42 /* VirtualCurrencyManager-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		30C1654B14A12D1200A61D42 /* VirtualCurrencyManagerTests */ = {
+			isa = PBXGroup;
+			children = (
+				30C1655114A12D1200A61D42 /* VirtualCurrencyManagerTests.h */,
+				30C1655214A12D1200A61D42 /* VirtualCurrencyManagerTests.m */,
+				30C1654C14A12D1200A61D42 /* Supporting Files */,
+			);
+			path = VirtualCurrencyManagerTests;
+			sourceTree = "<group>";
+		};
+		30C1654C14A12D1200A61D42 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				30C1654D14A12D1200A61D42 /* VirtualCurrencyManagerTests-Info.plist */,
+				30C1654E14A12D1200A61D42 /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		30C1655C14A12DEA00A61D42 /* libs */ = {
+			isa = PBXGroup;
+			children = (
+				30C1655D14A12E0400A61D42 /* SFHFKeychainUtils.h */,
+				30C1655E14A12E0400A61D42 /* SFHFKeychainUtils.m */,
+			);
+			name = libs;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		30C1653014A12D1100A61D42 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30C1655F14A12E0400A61D42 /* SFHFKeychainUtils.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		30C1653114A12D1100A61D42 /* VirtualCurrencyManager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 30C1655614A12D1200A61D42 /* Build configuration list for PBXNativeTarget "VirtualCurrencyManager" */;
+			buildPhases = (
+				30C1652E14A12D1100A61D42 /* Sources */,
+				30C1652F14A12D1100A61D42 /* Frameworks */,
+				30C1653014A12D1100A61D42 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VirtualCurrencyManager;
+			productName = VirtualCurrencyManager;
+			productReference = 30C1653214A12D1100A61D42 /* libVirtualCurrencyManager.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		30C1654114A12D1200A61D42 /* VirtualCurrencyManagerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 30C1655914A12D1200A61D42 /* Build configuration list for PBXNativeTarget "VirtualCurrencyManagerTests" */;
+			buildPhases = (
+				30C1653D14A12D1200A61D42 /* Sources */,
+				30C1653E14A12D1200A61D42 /* Frameworks */,
+				30C1653F14A12D1200A61D42 /* Resources */,
+				30C1654014A12D1200A61D42 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				30C1654914A12D1200A61D42 /* PBXTargetDependency */,
+			);
+			name = VirtualCurrencyManagerTests;
+			productName = VirtualCurrencyManagerTests;
+			productReference = 30C1654214A12D1200A61D42 /* VirtualCurrencyManagerTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		30C1652914A12D1000A61D42 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = "NASA Trained Monkeys";
+			};
+			buildConfigurationList = 30C1652C14A12D1000A61D42 /* Build configuration list for PBXProject "VirtualCurrencyManager" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 30C1652714A12D1000A61D42;
+			productRefGroup = 30C1653314A12D1100A61D42 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				30C1653114A12D1100A61D42 /* VirtualCurrencyManager */,
+				30C1654114A12D1200A61D42 /* VirtualCurrencyManagerTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		30C1653F14A12D1200A61D42 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30C1655014A12D1200A61D42 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		30C1654014A12D1200A61D42 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		30C1652E14A12D1100A61D42 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30C1653C14A12D1100A61D42 /* VirtualCurrencyManager.m in Sources */,
+				30C1656014A12E0400A61D42 /* SFHFKeychainUtils.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30C1653D14A12D1200A61D42 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30C1655314A12D1200A61D42 /* VirtualCurrencyManagerTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		30C1654914A12D1200A61D42 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 30C1653114A12D1100A61D42 /* VirtualCurrencyManager */;
+			targetProxy = 30C1654814A12D1200A61D42 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		30C1654E14A12D1200A61D42 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				30C1654F14A12D1200A61D42 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		30C1655414A12D1200A61D42 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		30C1655514A12D1200A61D42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		30C1655714A12D1200A61D42 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/VirtualCurrencyManager.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "VirtualCurrencyManager/VirtualCurrencyManager-Prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		30C1655814A12D1200A61D42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = /tmp/VirtualCurrencyManager.dst;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "VirtualCurrencyManager/VirtualCurrencyManager-Prefix.pch";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		30C1655A14A12D1200A61D42 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "VirtualCurrencyManager/VirtualCurrencyManager-Prefix.pch";
+				INFOPLIST_FILE = "VirtualCurrencyManagerTests/VirtualCurrencyManagerTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		30C1655B14A12D1200A61D42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "VirtualCurrencyManager/VirtualCurrencyManager-Prefix.pch";
+				INFOPLIST_FILE = "VirtualCurrencyManagerTests/VirtualCurrencyManagerTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		30C1652C14A12D1000A61D42 /* Build configuration list for PBXProject "VirtualCurrencyManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30C1655414A12D1200A61D42 /* Debug */,
+				30C1655514A12D1200A61D42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		30C1655614A12D1200A61D42 /* Build configuration list for PBXNativeTarget "VirtualCurrencyManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30C1655714A12D1200A61D42 /* Debug */,
+				30C1655814A12D1200A61D42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		30C1655914A12D1200A61D42 /* Build configuration list for PBXNativeTarget "VirtualCurrencyManagerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30C1655A14A12D1200A61D42 /* Debug */,
+				30C1655B14A12D1200A61D42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 30C1652914A12D1000A61D42 /* Project object */;
+}
