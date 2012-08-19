@@ -58,27 +58,28 @@
 - (void) verifyReceiptOnComplete:(void (^)(NSNumber*)) completionBlock
                          onError:(void (^)(NSError*)) errorBlock
 {        
-  self.onSubscriptionVerificationCompleted = completionBlock;
-  self.onSubscriptionVerificationFailed = errorBlock;
-  
-  NSURL *url = [NSURL URLWithString:kReceiptValidationURL];
+    self.onSubscriptionVerificationCompleted = completionBlock;
+    self.onSubscriptionVerificationFailed = errorBlock;
+    
+    NSURL *url = [NSURL URLWithString:kReceiptValidationURL];
 	
 	NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
-                                                            cachePolicy:NSURLRequestReloadIgnoringCacheData 
-                                                        timeoutInterval:60];
+                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
+                                                          timeoutInterval:60];
 	
 	[theRequest setHTTPMethod:@"POST"];		
 	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-	
-  NSString *receiptString = [NSString stringWithFormat:@"{\"receipt-data\":\"%@\" \"password\":\"%@\"}", [self.receipt base64EncodedString], kSharedSecret];        
-  
+    
+	NSString *sharedSecret = [[MKStoreManager sharedManager] sharedSecret];
+    NSString *receiptString = [NSString stringWithFormat:@"{\"receipt-data\":\"%@\" \"password\":\"%@\"}", [self.receipt base64EncodedString], sharedSecret];        
+    
 	NSString *length = [NSString stringWithFormat:@"%d", [receiptString length]];	
 	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
 	
 	[theRequest setHTTPBody:[receiptString dataUsingEncoding:NSUTF8StringEncoding]];
 	
-  self.theConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];  
-  [self.theConnection start];    
+    self.theConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];  
+    [self.theConnection start];    
 }
 
 -(BOOL) isSubscriptionActive

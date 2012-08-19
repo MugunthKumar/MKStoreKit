@@ -31,11 +31,16 @@
 //	3) or a tweet mentioning @mugunthkumar
 //	4) A paypal donation to mugunth.kumar@gmail.com
 
+//  Usage
+//        MKStoreManager *manager = [MKStoreManager sharedManager];
+//        manager.ownServer = ISUPPORT_HOST;
+//        manager.reviewAllowed = YES;
+//        manager.sharedSecret = kStoreKitSharedSecret;
+//        manager.itemsPlist = @"MyStorekitItems.plist";
 
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
 #import "MKStoreObserver.h"
-#import "MKStoreKitConfigs.h"
 #import "JSONKit.h"
 
 #define kReceiptStringKey @"MK_STOREKIT_RECEIPTS_STRING"
@@ -52,11 +57,17 @@
 
 @interface MKStoreManager : NSObject<SKProductsRequestDelegate>
 
+
 // These are the methods you will be using in your app
+
+// Call this from your app delegate to get things set up
++ (void)setupWithSharedSecret:(NSString *)sharedSecret server:(NSString *)ownServer reviewAllowed:(BOOL)reviewAllowed itemsPlist:(NSString *)itemsPlist;
+
+// Call this to get the shared manager whenever you need it (after setting it up)
 + (MKStoreManager*)sharedManager;
 
 // this is a static method, since it doesn't require the store manager to be initialized prior to calling
-+ (BOOL) isFeaturePurchased:(NSString*) featureId; 
++ (BOOL) isFeaturePurchased:(NSString*) featureId;
 //returns a dictionary with all prices for identifiers
 - (NSMutableDictionary *)pricesDictionary;
 - (NSMutableArray*) purchasableObjectsDescription;
@@ -82,4 +93,9 @@
 
 -(void) restoreCompleted;
 -(void) restoreFailedWithError:(NSError*) error;
+
+- (NSString *)ownServer;
+- (BOOL) reviewAllowed;
+- (NSString *)sharedSecret;
+
 @end

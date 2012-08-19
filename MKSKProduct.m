@@ -29,12 +29,15 @@
 //	4) A paypal donation to mugunth.kumar@gmail.com
 
 #import "MKSKProduct.h"
+#import "NSData+Base64.h"
+#import "MKStoreManager.h"
+
 #if ! __has_feature(objc_arc)
 #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 
-static void (^onReviewRequestVerificationSucceeded)();
-static void (^onReviewRequestVerificationFailed)();
+static void (^onReviewRequestVerificationSucceeded)(NSNumber *allowed);
+static void (^onReviewRequestVerificationFailed)(NSError *error);
 static NSURLConnection *sConnection;
 static NSMutableData *sDataFromConnection;
 
@@ -133,66 +136,65 @@ static NSMutableData *sDataFromConnection;
                           onComplete:(void (^)(NSNumber*)) completionBlock
                              onError:(void (^)(NSError*)) errorBlock
 {
-  if(REVIEW_ALLOWED)
-  {
-    onReviewRequestVerificationSucceeded = [completionBlock copy];
-    onReviewRequestVerificationFailed = [errorBlock copy];
-    
-    NSString *uniqueID = [self deviceId];
-    // check udid and featureid with developer's server
+    if([[MKStoreManager sharedManager] reviewAllowed])
+    {
+        onReviewRequestVerificationSucceeded = [completionBlock copy];
+        onReviewRequestVerificationFailed = [errorBlock copy];
+        
+        NSString *uniqueID = [self deviceId];
+        // check udid and featureid with developer's server
 		
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", OWN_SERVER, @"featureCheck.php"]];
-    
-    NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
-                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
-                                                          timeoutInterval:60];
-    
-    [theRequest setHTTPMethod:@"POST"];		
-    [theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    
-    NSString *postData = [NSString stringWithFormat:@"productid=%@&udid=%@", productId, uniqueID];
-    
-    NSString *length = [NSString stringWithFormat:@"%d", [postData length]];	
-    [theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
-    
-    [theRequest setHTTPBody:[postData dataUsingEncoding:NSASCIIStringEncoding]];
-    
-    sConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];    
-    [sConnection start];	
-  }
-  else
-  {
-    completionBlock([NSNumber numberWithBool:NO]);
-  }
+        NSString *server = [[MKStoreManager sharedManager] ownServer];
+        NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", server, @"featureCheck.php"]];
+        
+        NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
+                                                                  cachePolicy:NSURLRequestReloadIgnoringCacheData 
+                                                              timeoutInterval:60];
+        
+        [theRequest setHTTPMethod:@"POST"];		
+        [theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+        
+        NSString *postData = [NSString stringWithFormat:@"productid=%@&udid=%@", productId, uniqueID];
+        
+        NSString *length = [NSString stringWithFormat:@"%d", [postData length]];	
+        [theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
+        
+        [theRequest setHTTPBody:[postData dataUsingEncoding:NSASCIIStringEncoding]];
+        
+        sConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];    
+        [sConnection start];	
+    }
+    else
+    {
+        completionBlock([NSNumber numberWithBool:NO]);
+    }
 }
 
 - (void) verifyReceiptOnComplete:(void (^)(void)) completionBlock
                          onError:(void (^)(NSError*)) errorBlock
 {
-  self.onReceiptVerificationSucceeded = completionBlock;
-  self.onReceiptVerificationFailed = errorBlock;
-  
-  NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", OWN_SERVER, @"verifyProduct.php"]];
+    self.onReceiptVerificationSucceeded = completionBlock;
+    self.onReceiptVerificationFailed = errorBlock;
+    
+    NSString *server = [[MKStoreManager sharedManager] ownServer];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", server, @"verifyProduct.php"]];
 	
 	NSMutableURLRequest *theRequest = [NSMutableURLRequest requestWithURL:url 
-                                                            cachePolicy:NSURLRequestReloadIgnoringCacheData 
-                                                        timeoutInterval:60];
+                                                              cachePolicy:NSURLRequestReloadIgnoringCacheData 
+                                                          timeoutInterval:60];
 	
 	[theRequest setHTTPMethod:@"POST"];		
 	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
 	
-	NSString *receiptDataString = [[NSString alloc] initWithData:self.receipt 
-                                                      encoding:NSASCIIStringEncoding];
-  
-	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", receiptDataString];
+	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", [self.receipt base64EncodedString]];
 	
 	NSString *length = [NSString stringWithFormat:@"%d", [postData length]];	
 	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
 	
 	[theRequest setHTTPBody:[postData dataUsingEncoding:NSASCIIStringEncoding]];
 	
-  self.theConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];    
-  [self.theConnection start];	
+    self.theConnection = [NSURLConnection connectionWithRequest:theRequest delegate:self];    
+    [self.theConnection start];	
 }
 
 
@@ -269,26 +271,14 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSString *responseString = [[NSString alloc] initWithData:sDataFromConnection 
                                                    encoding:NSASCIIStringEncoding];
-	
-  sDataFromConnection = nil;
-  
-	if([responseString isEqualToString:@"YES"])		
-	{
+
+    sDataFromConnection = nil;
+    
     if(onReviewRequestVerificationSucceeded)
     {
-      onReviewRequestVerificationSucceeded();
-      onReviewRequestVerificationFailed = nil;
+        onReviewRequestVerificationSucceeded([NSNumber numberWithBool:[responseString isEqualToString:@"YES"]]);
+        onReviewRequestVerificationSucceeded = nil;
     }
-	}
-  else
-  {
-    if(onReviewRequestVerificationFailed)
-      onReviewRequestVerificationFailed(nil);
-    
-    onReviewRequestVerificationFailed = nil;
-  }
-	
-  
 }
 
 + (void)connection:(NSURLConnection *)connection
@@ -298,7 +288,7 @@ didReceiveResponse:(NSURLResponse *)response
   
   if(onReviewRequestVerificationFailed)
   {
-    onReviewRequestVerificationFailed(nil);    
+    onReviewRequestVerificationFailed(error);    
     onReviewRequestVerificationFailed = nil;
   }
 }
