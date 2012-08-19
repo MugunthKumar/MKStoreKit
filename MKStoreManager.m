@@ -249,8 +249,8 @@ static MKStoreManager* _sharedStoreManager;
                                                      selector:@selector(updateFromiCloud:) 
                                                          name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
                                                        object:nil];
-    }
 #endif
+    }
 }
 
 + (MKStoreManager*)sharedManager
