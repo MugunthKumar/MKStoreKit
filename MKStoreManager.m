@@ -43,6 +43,14 @@
 
 @interface MKStoreManager () //private methods and properties
 
+@property (nonatomic, strong) NSString *ownServer;
+@property (nonatomic, assign) BOOL reviewAllowed;
+@property (nonatomic, strong) NSString *sharedSecret;
+
+@property (nonatomic, strong) NSDictionary *consumables;
+@property (nonatomic, strong) NSArray *nonConsumables;
+@property (nonatomic, strong) NSDictionary *subscriptions;
+
 @property (nonatomic, copy) void (^onTransactionCancelled)();
 @property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId, NSData* receiptData);
 
@@ -57,13 +65,22 @@
 
 @property (nonatomic, strong) SKProductsRequest *productsRequest;
 
-- (void) requestProductData;
-- (void) startVerifyingSubscriptionReceipts;
+-(void) requestProductData;
+-(void) startVerifyingSubscriptionReceipts;
 -(void) rememberPurchaseOfProduct:(NSString*) productIdentifier withReceipt:(NSData*) receiptData;
 -(void) addToQueue:(NSString*) productId;
 @end
 
 @implementation MKStoreManager
+
+@synthesize ownServer = ownServer_;
+@synthesize reviewAllowed = reviewAllowed_;
+@synthesize sharedSecret = sharedSecret_;
+
+@synthesize consumables = consumables_;
+@synthesize nonConsumables = nonConsumables_;
+@synthesize subscriptions = subscriptions_;
+
 
 @synthesize purchasableObjects = _purchasableObjects;
 @synthesize storeObserver = _storeObserver;
@@ -178,48 +195,70 @@ static MKStoreManager* _sharedStoreManager;
 
 +(NSNumber*) numberForKey:(NSString*) key
 {
-  return [NSNumber numberWithInt:[[MKStoreManager objectForKey:key] intValue]];
+    return [NSNumber numberWithInt:[[MKStoreManager objectForKey:key] intValue]];
 }
 
 +(NSData*) dataForKey:(NSString*) key
 {
-  NSString *str = [MKStoreManager objectForKey:key];
-  return [str dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *str = [MKStoreManager objectForKey:key];
+    return [str dataUsingEncoding:NSUTF8StringEncoding];
+}
+
+#pragma mark initializer
+- (id)initWithSharedSecret:(NSString *)sharedSecret server:(NSString *)ownServer reviewAllowed:(BOOL)reviewAllowed itemsPlist:(NSString *)itemsPlist {
+    self = [super init];
+    
+    if (self) {
+        self.sharedSecret = sharedSecret;
+        self.ownServer = ownServer;         // Set your own server if you want to do server-side validation
+        self.reviewAllowed = reviewAllowed; // YES if you want to allow reviews and you have a server set up to do so
+
+        NSDictionary *items = [NSDictionary dictionaryWithContentsOfFile:
+                               [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:itemsPlist]];
+        
+        self.consumables = [items objectForKey:@"Consumables"];
+        self.nonConsumables = [items objectForKey:@"Non-Consumables"];
+        self.subscriptions = [items objectForKey:@"Subscriptions"];
+    }
+
+    return self;
 }
 
 #pragma mark Singleton Methods
 
-+ (MKStoreManager*)sharedManager
-{
++ (void)setupWithSharedSecret:(NSString *)sharedSecret server:(NSString *)ownServer reviewAllowed:(BOOL)reviewAllowed itemsPlist:(NSString *)itemsPlist {
 	if(!_sharedStoreManager) {
+#if TARGET_IPHONE_SIMULATOR
+        NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
+#else
 		static dispatch_once_t oncePredicate;
 		dispatch_once(&oncePredicate, ^{      
-			_sharedStoreManager = [[self alloc] init];            
-      _sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
-      [_sharedStoreManager requestProductData];						
-      _sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
-      [[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];            
-      [_sharedStoreManager startVerifyingSubscriptionReceipts];    });
+			_sharedStoreManager = [[self alloc] initWithSharedSecret:sharedSecret 
+                                                              server:ownServer
+                                                       reviewAllowed:reviewAllowed 
+                                                          itemsPlist:itemsPlist];
+            _sharedStoreManager.purchasableObjects = [[NSMutableArray alloc] init];
+            [_sharedStoreManager requestProductData];						
+            _sharedStoreManager.storeObserver = [[MKStoreObserver alloc] init];
+            [[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager.storeObserver];            
+            [_sharedStoreManager startVerifyingSubscriptionReceipts];    
+        });
         
-    if([self iCloudAvailable])
-      [[NSNotificationCenter defaultCenter] addObserver:self 
-                                               selector:@selector(updateFromiCloud:) 
-                                                   name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
-                                                 object:nil];
+        if([self iCloudAvailable])
+            [[NSNotificationCenter defaultCenter] addObserver:self 
+                                                     selector:@selector(updateFromiCloud:) 
+                                                         name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
+                                                       object:nil];
+#endif
+    }
+}
 
-
-  }
-  return _sharedStoreManager;
++ (MKStoreManager*)sharedManager
+{
+    return _sharedStoreManager;
 }
 
 #pragma mark Internal MKStoreKit functions
-
--(NSDictionary*) storeKitItems
-{
-  return [NSDictionary dictionaryWithContentsOfFile:
-          [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:
-           @"MKStoreKitConfigs.plist"]];
-}
 
 - (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
                                        onError:(void (^)(NSError*)) errorBlock
@@ -246,42 +285,36 @@ static MKStoreManager* _sharedStoreManager;
 
 -(void) requestProductData
 {
-  NSMutableArray *productsArray = [NSMutableArray array];
-  NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
-  NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
-  NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
-  
-  [productsArray addObjectsFromArray:consumables];
-  [productsArray addObjectsFromArray:nonConsumables];
-  [productsArray addObjectsFromArray:subscriptions];
-  
+    NSMutableArray *productsArray = [NSMutableArray array];
+    
+    [productsArray addObjectsFromArray:self.consumables.allKeys];
+    [productsArray addObjectsFromArray:self.nonConsumables];
+    [productsArray addObjectsFromArray:self.subscriptions.allKeys];
+    
 	self.productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
 	self.productsRequest.delegate = self;
 	[self.productsRequest start];
 }
+
 - (BOOL) removeAllKeychainData {
-  NSMutableArray *productsArray = [NSMutableArray array];
-  NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
-  NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
-  NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
-  
-  [productsArray addObjectsFromArray:consumables];
-  [productsArray addObjectsFromArray:nonConsumables];
-  [productsArray addObjectsFromArray:subscriptions];
-  
-  int itemCount = productsArray.count;
-  NSError *error;
-  
-  //loop through all the saved keychain data and remove it    
-  for (int i = 0; i < itemCount; i++ ) {
-    [SFHFKeychainUtils deleteItemForUsername:[productsArray objectAtIndex:i] andServiceName:@"MKStoreKit" error:&error];
-  }
-  if (!error) {
-    return YES; 
-  }
-  else {
-    return NO;
-  }
+    NSMutableArray *productsArray = [NSMutableArray array];
+    
+    [productsArray addObjectsFromArray:self.consumables.allKeys];
+    [productsArray addObjectsFromArray:self.nonConsumables];
+    [productsArray addObjectsFromArray:self.subscriptions.allKeys];
+    
+    int itemCount = productsArray.count;
+    NSError *error = NULL;
+    BOOL OK = YES;
+    
+    //loop through all the saved keychain data and remove it    
+    for (int i = 0; i < itemCount; i++ ) {
+        [SFHFKeychainUtils deleteItemForUsername:[productsArray objectAtIndex:i] andServiceName:@"MKStoreKit" error:&error];
+        if (error)
+            OK = NO;
+    }
+
+    return OK;
 }
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
@@ -455,22 +488,37 @@ static MKStoreManager* _sharedStoreManager;
 
 -(void) addToQueue:(NSString*) productId
 {
-  if ([SKPaymentQueue canMakePayments])
-	{
-    NSArray *allIds = [self.purchasableObjects valueForKey:@"productIdentifier"];
-    int index = [allIds indexOfObject:productId];
-    
-    if(index == NSNotFound) return;
-    
-    SKProduct *thisProduct = [self.purchasableObjects objectAtIndex:index];
-		SKPayment *payment = [SKPayment paymentWithProduct:thisProduct];
-		[[SKPaymentQueue defaultQueue] addPayment:payment];
-	}
-	else
-	{
-    [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
-                     message:NSLocalizedString(@"Check your parental control settings and try again later", @"")];
-	}
+    @try {
+        if ([SKPaymentQueue canMakePayments])
+        {
+            NSArray *allIds = [self.purchasableObjects valueForKey:@"productIdentifier"];
+            int index = [allIds indexOfObject:productId];
+            
+            if(index == NSNotFound) {
+                [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing failed", @"")
+                                 message:NSLocalizedString(@"Please try again later", @"")];
+
+                if(self.onTransactionCancelled)
+                    self.onTransactionCancelled();
+            } else {
+                SKProduct *thisProduct = [self.purchasableObjects objectAtIndex:index];
+                SKPayment *payment = [SKPayment paymentWithProduct:thisProduct];
+                [[SKPaymentQueue defaultQueue] addPayment:payment];
+            }
+        }
+        else
+        {
+            [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing disabled", @"")
+                             message:NSLocalizedString(@"Check your parental control settings and try again later", @"")];
+        }
+    }
+    @catch (NSException *exception) {
+        [self showAlertWithTitle:NSLocalizedString(@"In-App Purchasing failed", @"")
+                         message:NSLocalizedString(@"Please try again later", @"")];
+        
+        if(self.onTransactionCancelled)
+            self.onTransactionCancelled();
+    }
 }
 
 - (BOOL) canConsumeProduct:(NSString*) productIdentifier
@@ -504,12 +552,10 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void) startVerifyingSubscriptionReceipts
 {
-  NSDictionary *subscriptions = [[self storeKitItems] objectForKey:@"Subscriptions"];
-  
   self.subscriptionProducts = [NSMutableDictionary dictionary];
-  for(NSString *productId in [subscriptions allKeys])
+  for(NSString *productId in self.subscriptions.allKeys)
   {
-    MKSKSubscriptionProduct *product = [[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[subscriptions objectForKey:productId] intValue]];        
+    MKSKSubscriptionProduct *product = [[MKSKSubscriptionProduct alloc] initWithProductId:productId subscriptionDays:[[self.subscriptions objectForKey:productId] intValue]];        
     product.receipt = [MKStoreManager dataForKey:productId]; // cached receipt
     
     if(product.receipt)
@@ -551,99 +597,100 @@ static MKStoreManager* _sharedStoreManager;
 -(void) provideContent: (NSString*) productIdentifier 
             forReceipt:(NSData*) receiptData
 {
-  MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
-  if(subscriptionProduct)
-  {                
-    // MAC In App Purchases can never be a subscription product (at least as on Dec 2011)
-    // so this can be safely ignored.
-    
-    subscriptionProduct.receipt = receiptData;
-    [subscriptionProduct verifyReceiptOnComplete:^(NSNumber* isActive)
-     {
-       [[NSNotificationCenter defaultCenter] postNotificationName:kSubscriptionsPurchasedNotification 
-                                                           object:productIdentifier];
-       
-       [MKStoreManager setObject:receiptData forKey:productIdentifier];      
-       if(self.onTransactionCompleted)
-         self.onTransactionCompleted(productIdentifier, receiptData);
-     }
-                                         onError:^(NSError* error)
-     {
-       NSLog(@"%@", [error description]);
-     }];
-  }        
-  else
-  {
-    if(!receiptData) {
-      
-      // could be a mac in app receipt.
-      // read from receipts and verify here
-      receiptData = [self receiptFromBundle];
-      if(!receiptData) {
-        if(self.onTransactionCancelled)
+    MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
+    if(subscriptionProduct)
+    {                
+        // MAC In App Purchases can never be a subscription product (at least as on Dec 2011)
+        // so this can be safely ignored.
+        
+        subscriptionProduct.receipt = receiptData;
+        [subscriptionProduct verifyReceiptOnComplete:^(NSNumber* isActive)
+         {
+             [[NSNotificationCenter defaultCenter] postNotificationName:kSubscriptionsPurchasedNotification 
+                                                                 object:productIdentifier];
+             
+             [MKStoreManager setObject:receiptData forKey:productIdentifier];      
+             if(self.onTransactionCompleted)
+                 self.onTransactionCompleted(productIdentifier, receiptData);
+         }
+                                             onError:^(NSError* error)
+         {
+             NSLog(@"%@", [error description]);
+         }];
+    }        
+    else
+    {
+        if(!receiptData) {
+            
+            // could be a mac in app receipt.
+            // read from receipts and verify here
+            receiptData = [self receiptFromBundle];
+            if(!receiptData) {
+                if(self.onTransactionCancelled)
+                {
+                    self.onTransactionCancelled(productIdentifier);
+                }
+                else
+                {
+                    NSLog(@"Receipt invalid");
+                }
+            }
+        }
+        
+        if([[MKStoreManager sharedManager] ownServer])
         {
-          self.onTransactionCancelled(productIdentifier);
+            // ping server and get response before serializing the product
+            // this is a blocking call to post receipt data to your server
+            // it should normally take a couple of seconds on a good 3G connection
+            MKSKProduct *thisProduct = [[MKSKProduct alloc] initWithProductId:productIdentifier receiptData:receiptData];
+            
+            [thisProduct verifyReceiptOnComplete:^
+             {
+                 [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
+                 if(self.onTransactionCompleted)
+                     self.onTransactionCompleted(productIdentifier, receiptData);
+             }
+                                         onError:^(NSError* error)
+             {
+                 if(self.onTransactionCancelled)
+                 {
+                     self.onTransactionCancelled(productIdentifier);
+                 }
+                 else
+                 {
+                     NSLog(@"The receipt could not be verified");
+                 }
+             }];            
         }
         else
         {
-          NSLog(@"Receipt invalid");
-        }
-      }
+            [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
+            if(self.onTransactionCompleted)
+                self.onTransactionCompleted(productIdentifier, receiptData);
+        }                
     }
-    
-    if(OWN_SERVER && SERVER_PRODUCT_MODEL)
-    {
-      // ping server and get response before serializing the product
-      // this is a blocking call to post receipt data to your server
-      // it should normally take a couple of seconds on a good 3G connection
-      MKSKProduct *thisProduct = [[MKSKProduct alloc] initWithProductId:productIdentifier receiptData:receiptData];
-      
-      [thisProduct verifyReceiptOnComplete:^
-       {
-         [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
-       }
-                                   onError:^(NSError* error)
-       {
-         if(self.onTransactionCancelled)
-         {
-           self.onTransactionCancelled(productIdentifier);
-         }
-         else
-         {
-           NSLog(@"The receipt could not be verified");
-         }
-       }];            
-    }
-    else
-    {
-      [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
-      if(self.onTransactionCompleted)
-        self.onTransactionCompleted(productIdentifier, receiptData);
-    }                
-  }
 }
 
 
 -(void) rememberPurchaseOfProduct:(NSString*) productIdentifier withReceipt:(NSData*) receiptData
 {
-  NSDictionary *allConsumables = [[self storeKitItems] objectForKey:@"Consumables"];
-  if([[allConsumables allKeys] containsObject:productIdentifier])
-  {
-    NSDictionary *thisConsumableDict = [allConsumables objectForKey:productIdentifier];
-    int quantityPurchased = [[thisConsumableDict objectForKey:@"Count"] intValue];
-    NSString* productPurchased = [thisConsumableDict objectForKey:@"Name"];
+    if([self.consumables.allKeys containsObject:productIdentifier])
+    {
+        NSDictionary *thisConsumableDict = [self.consumables objectForKey:productIdentifier];
+        int quantityPurchased = [[thisConsumableDict objectForKey:@"Count"] intValue];
+        NSString* productPurchased = [thisConsumableDict objectForKey:@"Name"];
+        
+        int oldCount = [[MKStoreManager numberForKey:productPurchased] intValue];
+        int newCount = oldCount + quantityPurchased;	
+        
+        [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productPurchased];        
+    }
+    else
+    {
+        [MKStoreManager setObject:[NSNumber numberWithBool:YES] forKey:productIdentifier];	
+    }
     
-    int oldCount = [[MKStoreManager numberForKey:productPurchased] intValue];
-    int newCount = oldCount + quantityPurchased;	
-    
-    [MKStoreManager setObject:[NSNumber numberWithInt:newCount] forKey:productPurchased];        
-  }
-  else
-  {
-    [MKStoreManager setObject:[NSNumber numberWithBool:YES] forKey:productIdentifier];	
-  }
-
-  [MKStoreManager setObject:receiptData forKey:[NSString stringWithFormat:@"%@-receipt", productIdentifier]];	
+    [MKStoreManager setObject:receiptData forKey:[NSString stringWithFormat:@"%@-receipt", productIdentifier]];	
 }
 
 - (void) transactionCanceled: (SKPaymentTransaction *)transaction
