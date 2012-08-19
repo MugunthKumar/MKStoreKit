@@ -228,6 +228,9 @@ static MKStoreManager* _sharedStoreManager;
 
 + (void)setupWithSharedSecret:(NSString *)sharedSecret server:(NSString *)ownServer reviewAllowed:(BOOL)reviewAllowed itemsPlist:(NSString *)itemsPlist {
 	if(!_sharedStoreManager) {
+#if TARGET_IPHONE_SIMULATOR
+        NSLog(@"You are running in Simulator MKStoreKit runs only on devices");
+#else
 		static dispatch_once_t oncePredicate;
 		dispatch_once(&oncePredicate, ^{      
 			_sharedStoreManager = [[self alloc] initWithSharedSecret:sharedSecret 
@@ -247,6 +250,7 @@ static MKStoreManager* _sharedStoreManager;
                                                          name:NSUbiquitousKeyValueStoreDidChangeExternallyNotification 
                                                        object:nil];
     }
+#endif
 }
 
 + (MKStoreManager*)sharedManager
