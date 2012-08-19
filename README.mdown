@@ -12,7 +12,7 @@ Added a setup method that you should call from your app delegate that sets all t
                                      server:@"https://Your.server.com" // or nil if you don't do server-side receipt validations 
                               reviewAllowed:YES                        // see below regarding temporary free access to reviewers
                                  itemsPlist:@"StoreKitItems.plist"];   // name of the plist file specifying your sellable items
-                                 
+```                                 
   
 The MKStoreManager is a singleton class that takes care of *everything*. Just include StoreKit.Framework and Security.Framework into your product and drag these four files into the project. You then have to initialize it by calling [MKStoreManager setupWithSharedSecret:server:reviewAllowed:itemsPlist:] in your applicationDidFinishLaunching. From then on, it does the magic. The MKStoreKit automatically activates/deactivates features using the keychain. When a feature is purchased, it automagically records it into the keychain. For checking whether the user has purchased the feature, you can call a function like,
 
