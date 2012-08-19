@@ -37,7 +37,7 @@
 #endif
 
 static void (^onReviewRequestVerificationSucceeded)(NSNumber *allowed);
-static void (^onReviewRequestVerificationFailed)();
+static void (^onReviewRequestVerificationFailed)(NSError *error);
 static NSURLConnection *sConnection;
 static NSMutableData *sDataFromConnection;
 
@@ -288,7 +288,7 @@ didReceiveResponse:(NSURLResponse *)response
   
   if(onReviewRequestVerificationFailed)
   {
-    onReviewRequestVerificationFailed(nil);    
+    onReviewRequestVerificationFailed(error);    
     onReviewRequestVerificationFailed = nil;
   }
 }
