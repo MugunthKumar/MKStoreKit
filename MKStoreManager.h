@@ -57,6 +57,10 @@
 
 // this is a static method, since it doesn't require the store manager to be initialized prior to calling
 + (BOOL) isFeaturePurchased:(NSString*) featureId; 
+
+// refresh product data with additional featureIds defined by the parameter
+- (void) requestProductData:(NSArray* (^)())loadIdentifierBlock;
+
 //returns a dictionary with all prices for identifiers
 - (NSMutableDictionary *)pricesDictionary;
 - (NSMutableArray*) purchasableObjectsDescription;
