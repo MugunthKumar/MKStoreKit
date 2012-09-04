@@ -246,11 +246,18 @@ static MKStoreManager* _sharedStoreManager;
 
 -(void) requestProductData
 {
+    [self requestProductData:nil];
+}
+
+-(void) requestProductData:(NSArray* (^)())loadIdentifierBlock
+{
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
   NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
   NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
-  
+
+  if(loadIdentifierBlock != nil) [productsArray addObjectsFromArray:loadIdentifierBlock()];
+
   [productsArray addObjectsFromArray:consumables];
   [productsArray addObjectsFromArray:nonConsumables];
   [productsArray addObjectsFromArray:subscriptions];
@@ -259,6 +266,7 @@ static MKStoreManager* _sharedStoreManager;
 	self.productsRequest.delegate = self;
 	[self.productsRequest start];
 }
+
 - (BOOL) removeAllKeychainData {
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
