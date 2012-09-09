@@ -214,9 +214,9 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSString *responseString = [[NSString alloc] initWithData:self.dataFromConnection 
                                                    encoding:NSASCIIStringEncoding];
-	
+  responseString = [responseString stringByTrimmingCharactersInSet:
+                    [NSCharacterSet whitespaceAndNewlineCharacterSet]];
   self.dataFromConnection = nil;
-  
 	if([responseString isEqualToString:@"YES"])		
 	{
     if(self.onReceiptVerificationSucceeded)
@@ -268,7 +268,8 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSString *responseString = [[NSString alloc] initWithData:sDataFromConnection 
                                                    encoding:NSASCIIStringEncoding];
-	
+  responseString = [responseString stringByTrimmingCharactersInSet:
+                    [NSCharacterSet whitespaceAndNewlineCharacterSet]];
   sDataFromConnection = nil;
   
 	if([responseString isEqualToString:@"YES"])		
