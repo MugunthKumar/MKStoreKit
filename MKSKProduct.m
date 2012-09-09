@@ -181,8 +181,7 @@ static NSMutableData *sDataFromConnection;
 	[theRequest setHTTPMethod:@"POST"];		
 	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
 	
-	NSString *receiptDataString = [[NSString alloc] initWithData:self.receipt 
-                                                      encoding:NSASCIIStringEncoding];
+	NSString *receiptDataString = [self.receipt base64EncodedString];
   
 	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", receiptDataString];
 	
