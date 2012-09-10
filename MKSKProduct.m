@@ -181,8 +181,7 @@ static NSMutableData *sDataFromConnection;
 	[theRequest setHTTPMethod:@"POST"];		
 	[theRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
 	
-	NSString *receiptDataString = [[NSString alloc] initWithData:self.receipt 
-                                                      encoding:NSASCIIStringEncoding];
+	NSString *receiptDataString = [self.receipt base64EncodedString];
   
 	NSString *postData = [NSString stringWithFormat:@"receiptdata=%@", receiptDataString];
 	
@@ -215,9 +214,9 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSString *responseString = [[NSString alloc] initWithData:self.dataFromConnection 
                                                    encoding:NSASCIIStringEncoding];
-	
+  responseString = [responseString stringByTrimmingCharactersInSet:
+                    [NSCharacterSet whitespaceAndNewlineCharacterSet]];
   self.dataFromConnection = nil;
-  
 	if([responseString isEqualToString:@"YES"])		
 	{
     if(self.onReceiptVerificationSucceeded)
@@ -269,7 +268,8 @@ didReceiveResponse:(NSURLResponse *)response
 {
   NSString *responseString = [[NSString alloc] initWithData:sDataFromConnection 
                                                    encoding:NSASCIIStringEncoding];
-	
+  responseString = [responseString stringByTrimmingCharactersInSet:
+                    [NSCharacterSet whitespaceAndNewlineCharacterSet]];
   sDataFromConnection = nil;
   
 	if([responseString isEqualToString:@"YES"])		
