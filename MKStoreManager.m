@@ -604,6 +604,8 @@ static MKStoreManager* _sharedStoreManager;
       [thisProduct verifyReceiptOnComplete:^
        {
          [self rememberPurchaseOfProduct:productIdentifier withReceipt:receiptData];
+         if(self.onTransactionCompleted)
+           self.onTransactionCompleted(productIdentifier, receiptData);                                         
        }
                                    onError:^(NSError* error)
        {
