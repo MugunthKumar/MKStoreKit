@@ -4,7 +4,7 @@
 <dict>
 	<key>Consumables</key>
 	<dict>
-		<key>com.mugunthkumar.inappsubtest.consumable1</key>
+		<key>com.steinlogic.iap6test.consumable</key>
 		<dict>
 			<key>Count</key>
 			<integer>500</integer>
@@ -14,11 +14,11 @@
 	</dict>
 	<key>Non-Consumables</key>
 	<array>
-		<string>com.mugunthkumar.caltasks.propack</string>
+		<string>com.steinlogic.iap6test.nonconsumable</string>
 	</array>
 	<key>Subscriptions</key>
 	<dict>
-		<key>com.mugunthkumar.subinapptest.wk1</key>
+		<key>com.steinlogic.iap6test.autorenew</key>
 		<integer>7</integer>
 	</dict>
 </dict>
