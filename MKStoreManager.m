@@ -539,6 +539,7 @@ static MKStoreManager* _sharedStoreManager;
   return nil;
 }
 
+#ifdef __IPHONE_6_0
 -(void) hostedContentDownloadStatusChanged:(NSArray*) hostedContents {
   
   __block SKDownload *thisHostedContent = nil;
@@ -563,6 +564,7 @@ static MKStoreManager* _sharedStoreManager;
   if(self.hostedContentDownloadStatusChangedHandler)
     self.hostedContentDownloadStatusChangedHandler(self.hostedContents);
 }
+#endif
 
 #pragma mark In-App purchases callbacks
 // In most cases you don't have to touch these methods
@@ -767,9 +769,11 @@ static MKStoreManager* _sharedStoreManager;
   [[SKPaymentQueue defaultQueue] finishTransaction: transaction];
 }
 
+#ifdef __IPHONE_6_0
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads {
   
   [self hostedContentDownloadStatusChanged:downloads];
 }
+#endif
 
 @end
