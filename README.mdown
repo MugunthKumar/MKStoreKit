@@ -1,7 +1,7 @@
 #MKStoreKit
 
 This is version 5 of MKStoreKit. iOS 5+ only and requires zeroing weak referencing environment. No support for non-ARC compilers.
-
+MKStoreKit 5 is not API compatible with MKStoreKit 4. Dont' expect it to work out of the box if you are updating from a previous version. Refactoring should however be a simple 5 minute work.
 I'm working on In App Purchase hosted content support on iOS 6.
 It's implemented, but for some apparent reason, download doesn't happen. I've raised a support ticket to Apple.
 
