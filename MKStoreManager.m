@@ -91,7 +91,7 @@ static MKStoreManager* _sharedStoreManager;
                                  error:&error];
       if(error) NSLog(@"%@", error);
     }
-  }];  
+  }];
 }
 
 +(BOOL) iCloudAvailable {
@@ -730,13 +730,14 @@ static MKStoreManager* _sharedStoreManager;
 #if TARGET_OS_IPHONE
   
   NSArray *downloads = nil;
-  if([transaction respondsToSelector:@selector(downloads)]) {
-    downloads = transaction.downloads;
-    if([downloads count] > 0) {
-      
-      [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
-    }
+  
+#ifdef __IPHONE_6_0
+  downloads = transaction.downloads;
+  if([downloads count] > 0) {
+    
+    [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
   }
+#endif
   
   [self provideContent:transaction.payment.productIdentifier
             forReceipt:transaction.transactionReceipt
@@ -754,8 +755,10 @@ static MKStoreManager* _sharedStoreManager;
 {
 #if TARGET_OS_IPHONE
   NSArray *downloads = nil;
-  if([transaction respondsToSelector:@selector(downloads)])
-    downloads = transaction.downloads;
+  
+#ifdef __IPHONE_6_0
+  downloads = transaction.downloads;
+#endif
   
   [self provideContent: transaction.originalTransaction.payment.productIdentifier
             forReceipt:transaction.transactionReceipt
