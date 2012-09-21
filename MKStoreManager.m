@@ -179,7 +179,9 @@ static MKStoreManager* _sharedStoreManager;
 		dispatch_once(&oncePredicate, ^{
 			_sharedStoreManager = [[self alloc] init];
       _sharedStoreManager.purchasableObjects = [NSMutableArray array];
+#ifdef __IPHONE_6_0
       _sharedStoreManager.hostedContents = [NSMutableArray array];
+#endif
       [_sharedStoreManager requestProductData];
       [[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedStoreManager];
       [_sharedStoreManager startVerifyingSubscriptionReceipts];
