@@ -734,10 +734,12 @@ static MKStoreManager* _sharedStoreManager;
   NSArray *downloads = nil;
   
 #ifdef __IPHONE_6_0
-  downloads = transaction.downloads;
-  if([downloads count] > 0) {
-    
-    [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
+  if([transaction respondsToSelector:@selector(downloads)]) {
+    downloads = transaction.downloads;
+    if([downloads count] > 0) {
+      
+      [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
+    }
   }
 #endif
   
@@ -759,7 +761,8 @@ static MKStoreManager* _sharedStoreManager;
   NSArray *downloads = nil;
   
 #ifdef __IPHONE_6_0
-  downloads = transaction.downloads;
+  if([transaction respondsToSelector:@selector(downloads)])
+    downloads = transaction.downloads;
 #endif
   
   [self provideContent: transaction.originalTransaction.payment.productIdentifier
