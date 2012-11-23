@@ -182,9 +182,15 @@ static NSString *SFHFKeychainUtilsErrorDomain = @"SFHFKeychainUtilsErrorDomain";
   // version of this code (which set the password as a generic attribute instead of password data).
   NSMutableDictionary *attributeQuery = [query mutableCopy];
   [attributeQuery setObject: (id) kCFBooleanTrue forKey:(__bridge_transfer id) kSecReturnAttributes];
-  CFTypeRef attrResult = NULL;
-  OSStatus status = SecItemCopyMatching((__bridge_retained CFDictionaryRef) attributeQuery, &attrResult);
-  //NSDictionary *attributeResult = (__bridge_transfer NSDictionary *)attrResult;
+
+  CFDictionaryRef cfquery = (__bridge_retained CFDictionaryRef)attributeQuery;
+  CFDictionaryRef attrResult = NULL;
+  OSStatus status = SecItemCopyMatching(cfquery, (CFTypeRef *)&attrResult);
+  CFRelease(cfquery);
+  NSDictionary *result = (__bridge_transfer NSDictionary *)attrResult;
+  result = result;
+  result = nil;
+  
   if (status != noErr) {
     // No existing item found--simply return nil for the password
     if (error != nil && status != errSecItemNotFound) {
@@ -197,9 +203,14 @@ static NSString *SFHFKeychainUtilsErrorDomain = @"SFHFKeychainUtilsErrorDomain";
   // We have an existing item, now query for the password data associated with it.
   NSMutableDictionary *passwordQuery = [query mutableCopy];
   [passwordQuery setObject: (id) kCFBooleanTrue forKey: (__bridge_transfer id) kSecReturnData];
+
+  CFDictionaryRef cfpwdquery = (__bridge_retained CFDictionaryRef)passwordQuery;
   CFTypeRef resData = NULL;
-  status = SecItemCopyMatching((__bridge_retained CFDictionaryRef) passwordQuery, (CFTypeRef *) &resData);
+  status = SecItemCopyMatching(cfpwdquery, (CFTypeRef *) &resData);
+  CFRelease(cfpwdquery);
+
   NSData *resultData = (__bridge_transfer NSData *)resData;
+
   if (status != noErr) {
     if (status == errSecItemNotFound) {
       // We found attributes for the item previously, but no password now, so return a special error.
@@ -348,7 +359,10 @@ static NSString *SFHFKeychainUtilsErrorDomain = @"SFHFKeychainUtilsErrorDomain";
   NSArray *keys = [[NSArray alloc] initWithObjects: (__bridge_transfer NSString *) kSecClass, kSecAttrAccount, kSecAttrService, kSecReturnAttributes, nil];
   NSArray *objects = [[NSArray alloc] initWithObjects: (__bridge_transfer NSString *) kSecClassGenericPassword, username, serviceName, kCFBooleanTrue, nil];
   NSDictionary *query = [[NSDictionary alloc] initWithObjects: objects forKeys: keys];
-  OSStatus status = SecItemDelete((__bridge_retained CFDictionaryRef) query);
+
+  CFDictionaryRef cfquery = (__bridge_retained CFDictionaryRef)query;
+  OSStatus status = SecItemDelete(cfquery);
+  CFRelease(cfquery);
   
   if (error != nil && status != noErr)
   {
