@@ -45,7 +45,7 @@
 #define kReceiptValidationURL @"https://buy.itunes.apple.com/verifyReceipt"
 #endif
 
-#define kProductFetchedNotification @"MKStoreKitProductsFetched"
+#define kProductsFetchedNotification @"MKStoreKitProductsFetched"
 #define kSubscriptionsPurchasedNotification @"MKStoreKitSubscriptionsPurchased"
 #define kSubscriptionsInvalidNotification @"MKStoreKitSubscriptionsInvalid"
 
