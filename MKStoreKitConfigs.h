@@ -41,9 +41,19 @@
 #define kConsumableFeatureBId @"com.mycompany.myapp.005"
 #define FishBasket @"FishBasket"
 
-#define SERVER_PRODUCT_MODEL 0
-#define OWN_SERVER nil
-#define REVIEW_ALLOWED 0
+#ifndef SERVER_PRODUCT_MODEL
+    #define SERVER_PRODUCT_MODEL 0
+#endif
+
+#ifndef OWN_SERVER
+    #define OWN_SERVER nil
+#endif
+
+#ifndef REVIEW_ALLOWED
+    #define REVIEW_ALLOWED 0
+#endif
 
 #warning Shared Secret Missing Ignore this warning if you don't use auto-renewable subscriptions
-#define kSharedSecret @"<FILL IN YOUR SHARED SECRET HERE>"
+#ifndef kSharedSecret
+    #define kSharedSecret @"<FILL IN YOUR SHARED SECRET HERE>"
+#endif
