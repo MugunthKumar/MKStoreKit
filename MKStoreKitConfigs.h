@@ -33,13 +33,13 @@
 //	3) or a tweet mentioning @mugunthkumar
 //	4) A paypal donation to mugunth.kumar@gmail.com
 
-// To avoid making mistakes map plist entries to macros on this page.
-// when you include MKStoreManager in your clss, these macros get defined there
-
-#define kConsumableBaseFeatureId @"com.mycompany.myapp."
-#define kFeatureAId @"com.mugunthkumar.caltasks.propack"
-#define kConsumableFeatureBId @"com.mycompany.myapp.005"
-#define FishBasket @"FishBasket"
+// To avoid making mistakes map plist entries to macroses as below and use them
+// instead of keys itself.
+//
+// #define kConsumableBaseFeatureId @"com.mycompany.myapp."
+// #define kFeatureAId @"com.mugunthkumar.caltasks.propack"
+// #define kConsumableFeatureBId @"com.mycompany.myapp.005"
+// #define FishBasket @"FishBasket"
 
 #ifndef SERVER_PRODUCT_MODEL
     #define SERVER_PRODUCT_MODEL 0
