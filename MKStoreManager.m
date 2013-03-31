@@ -54,7 +54,7 @@
 @property (nonatomic, copy) void (^onTransactionCompleted)(NSString *productId, NSData* receiptData, NSArray* downloads);
 
 @property (nonatomic, copy) void (^onRestoreFailed)(NSError* error);
-@property (nonatomic, copy) void (^onRestoreCompleted)();
+@property (nonatomic, copy) void (^onRestoreCompleted)(NSArray *purchasedItems);
 
 @property (nonatomic, assign, getter=isProductsAvailable) BOOL isProductsAvailable;
 
@@ -207,20 +207,13 @@ static MKStoreManager* _sharedStoreManager;
            @"MKStoreKitConfigs.plist"]];
 }
 
-- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
+- (void) restorePreviousTransactionsOnComplete:(void (^)(NSArray *purchasedItems)) completionBlock
                                        onError:(void (^)(NSError*)) errorBlock
 {
   self.onRestoreCompleted = completionBlock;
   self.onRestoreFailed = errorBlock;
   
 	[[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
-}
-
--(void) restoreCompleted
-{
-  if(self.onRestoreCompleted)
-    self.onRestoreCompleted();
-  self.onRestoreCompleted = nil;
 }
 
 -(void) restoreFailedWithError:(NSError*) error
@@ -741,7 +734,18 @@ static MKStoreManager* _sharedStoreManager;
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
 {
-  [self restoreCompleted];
+  int purchasedItemsCount = queue.transactions.count;
+    NSMutableArray *purchasedItems = [[NSMutableArray alloc] initWithCapacity:purchasedItemsCount];
+
+    for (SKPaymentTransaction *transaction in queue.transactions)
+    {
+        NSString *purchasedItemId = transaction.payment.productIdentifier;
+        [purchasedItems addObject:purchasedItemId];
+    }
+
+    if(self.onRestoreCompleted)
+        self.onRestoreCompleted([purchasedItems copy]);
+    self.onRestoreCompleted = nil;
 }
 
 - (void) failedTransaction: (SKPaymentTransaction *)transaction
