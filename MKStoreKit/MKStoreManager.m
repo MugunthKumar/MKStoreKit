@@ -283,7 +283,7 @@ static MKStoreManager* _sharedStoreManager;
 	[self.purchasableObjects addObjectsFromArray:response.products];
 	
 #ifndef NDEBUG
-	for(int i=0;i<[self.purchasableObjects count];i++)
+	for(NSUInteger i=0;i<[self.purchasableObjects count];i++)
 	{
 		SKProduct *product = [self.purchasableObjects objectAtIndex:i];
 		NSLog(@"Feature: %@, Cost: %f, ID: %@",[product localizedTitle],
@@ -345,7 +345,7 @@ static MKStoreManager* _sharedStoreManager;
 - (NSMutableArray*) purchasableObjectsDescription
 {
 	NSMutableArray *productDescriptions = [[NSMutableArray alloc] initWithCapacity:[self.purchasableObjects count]];
-	for(int i=0;i<[self.purchasableObjects count];i++)
+	for(NSUInteger i=0;i<[self.purchasableObjects count];i++)
 	{
 		SKProduct *product = [self.purchasableObjects objectAtIndex:i];
 		
@@ -378,7 +378,7 @@ static MKStoreManager* _sharedStoreManager;
  */
 - (NSMutableDictionary *)pricesDictionary {
   NSMutableDictionary *priceDict = [NSMutableDictionary dictionary];
-	for(int i=0;i<[self.purchasableObjects count];i++)
+	for(NSUInteger i=0;i<[self.purchasableObjects count];i++)
 	{
 		SKProduct *product = [self.purchasableObjects objectAtIndex:i];
 		
@@ -689,8 +689,7 @@ static MKStoreManager* _sharedStoreManager;
   [MKStoreManager setObject:receiptData forKey:[NSString stringWithFormat:@"%@-receipt", productIdentifier]];
 }
 
-#pragma -
-#pragma mark Store Observer
+#pragma mark - Store Observer
 
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
 {
