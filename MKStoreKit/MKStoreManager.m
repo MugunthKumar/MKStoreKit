@@ -38,7 +38,7 @@
 #import "SFHFKeychainUtils.h"
 #import "MKSKSubscriptionProduct.h"
 #import "MKSKProduct.h"
-#import "NSData+Base64.h"
+#import "NSData+MKBase64.h"
 #if ! __has_feature(objc_arc)
 #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
@@ -250,14 +250,27 @@ static MKStoreManager* _sharedStoreManager;
   
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[[self storeKitItems] objectForKey:@"Consumables"] allKeys];
+  NSArray *consumableNames = [self allConsumableNames];
   NSArray *nonConsumables = [[self storeKitItems] objectForKey:@"Non-Consumables"];
   NSArray *subscriptions = [[[self storeKitItems] objectForKey:@"Subscriptions"] allKeys];
   
   [productsArray addObjectsFromArray:consumables];
+  [productsArray addObjectsFromArray:consumableNames];
   [productsArray addObjectsFromArray:nonConsumables];
   [productsArray addObjectsFromArray:subscriptions];
   
   return productsArray;
+}
+
++ (NSArray *)allConsumableNames {
+    NSMutableSet *consumableNames = [[NSMutableSet alloc] initWithCapacity:0];
+    NSDictionary *consumables = [[self storeKitItems] objectForKey:@"Consumables"];
+    for (NSDictionary *consumable in [consumables allValues]) {
+        NSString *name = [consumable objectForKey:@"Name"];
+        [consumableNames addObject:name];
+    }
+    
+    return [consumableNames allObjects];
 }
 
 - (BOOL) removeAllKeychainData {
@@ -565,24 +578,24 @@ static MKStoreManager* _sharedStoreManager;
   
   if(self.hostedContentDownloadStatusChangedHandler)
     self.hostedContentDownloadStatusChangedHandler(self.hostedContents);
-
-    // Finish any completed downloads
-    [hostedContents enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        SKDownload *download = obj;
- 
-        switch (download.downloadState) {
-            case SKDownloadStateFinished:
+  
+  // Finish any completed downloads
+  [hostedContents enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+    SKDownload *download = obj;
+    
+    switch (download.downloadState) {
+      case SKDownloadStateFinished:
 #ifndef NDEBUG
-                NSLog(@"Download finished: %@", [download description]);
+        NSLog(@"Download finished: %@", [download description]);
 #endif
-                [self provideContent:download.transaction.payment.productIdentifier
-                          forReceipt:download.transaction.transactionReceipt
-                       hostedContent:[NSArray arrayWithObject:download]];
-                
-                [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
-                break;
-        }
-    }];
+        [self provideContent:download.transaction.payment.productIdentifier
+                  forReceipt:download.transaction.transactionReceipt
+               hostedContent:[NSArray arrayWithObject:download]];
+        
+        [[SKPaymentQueue defaultQueue] finishTransaction:download.transaction];
+        break;
+    }
+  }];
 }
 #endif
 
@@ -751,15 +764,18 @@ static MKStoreManager* _sharedStoreManager;
   NSArray *downloads = nil;
   
 #ifdef __IPHONE_6_0
-  downloads = transaction.downloads;
+  
+  if([transaction respondsToSelector:@selector(downloads)])
+    downloads = transaction.downloads;
+  
   if([downloads count] > 0) {
     
     [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
-      // We don't have content yet, and we can't finish the transaction
+    // We don't have content yet, and we can't finish the transaction
 #ifndef NDEBUG
-      NSLog(@"Download(s) started: %@", [transaction description]);
+    NSLog(@"Download(s) started: %@", [transaction description]);
 #endif
-      return;
+    return;
   }
 #endif
   
@@ -781,16 +797,18 @@ static MKStoreManager* _sharedStoreManager;
   NSArray *downloads = nil;
   
 #ifdef __IPHONE_6_0
-  downloads = transaction.downloads;
-    if([downloads count] > 0) {
-        
-        [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
-        // We don't have content yet, and we can't finish the transaction
+  
+  if([transaction respondsToSelector:@selector(downloads)])
+    downloads = transaction.downloads;
+  if([downloads count] > 0) {
+    
+    [[SKPaymentQueue defaultQueue] startDownloads:transaction.downloads];
+    // We don't have content yet, and we can't finish the transaction
 #ifndef NDEBUG
-        NSLog(@"Download(s) started: %@", [transaction description]);
+    NSLog(@"Download(s) started: %@", [transaction description]);
 #endif
-        return;
-    }
+    return;
+  }
 #endif
   
   [self provideContent: transaction.originalTransaction.payment.productIdentifier
