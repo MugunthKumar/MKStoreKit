@@ -1,5 +1,5 @@
 //
-//  NSData+MKNKBase64.m
+//  NSData+MKBase64.m
 //  base64
 //
 //  Created by Matt Gallagher on 2009/06/03.
@@ -262,7 +262,7 @@ char *NewBase64Encode(
 	return outputBuffer;
 }
 
-@implementation NSData (MKNKBase64)
+@implementation NSData (MKBase64)
 
 //
 // dataFromBase64String:
