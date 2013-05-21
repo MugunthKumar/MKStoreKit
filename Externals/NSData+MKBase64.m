@@ -1,5 +1,5 @@
 //
-//  NSData+MKNKBase64.m
+//  NSData+MKBase64.m
 //  base64
 //
 //  Created by Matt Gallagher on 2009/06/03.
@@ -81,7 +81,7 @@ void *NewBase64Decode(
 	size_t length,
 	size_t *outputLength)
 {
-	if (length == -1)
+	if (length == (size_t)-1)
 	{
 		length = strlen(inputBuffer);
 	}
@@ -101,7 +101,7 @@ void *NewBase64Decode(
 		size_t accumulateIndex = 0;
 		while (i < length)
 		{
-			unsigned char decode = base64DecodeLookup[inputBuffer[i++]];
+			unsigned char decode = base64DecodeLookup[(unsigned char)inputBuffer[i++]];
 			if (decode != xx)
 			{
 				accumulated[accumulateIndex] = decode;
@@ -262,7 +262,7 @@ char *NewBase64Encode(
 	return outputBuffer;
 }
 
-@implementation NSData (MKNKBase64)
+@implementation NSData (MKBase64)
 
 //
 // dataFromBase64String:
