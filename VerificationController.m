@@ -333,8 +333,12 @@ static VerificationController *singleton;
         }
 #endif
     } else {
-        // Pre iOS 6 
+        // Pre iOS 6
+        // Removes the compiler warning in the newest Xcode.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         NSString *localIdentifier           = [UIDevice currentDevice].uniqueIdentifier;
+#pragma clang diagnostic pop
         NSString *purchaseInfoUniqueId      = [purchaseInfoFromTransaction objectForKey:@"unique-identifier"];
 
         
