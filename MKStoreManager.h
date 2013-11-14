@@ -57,6 +57,7 @@
 // this is a class method, since it doesn't require the store manager to be initialized prior to calling
 + (BOOL) isFeaturePurchased:(NSString*) featureId;
 
+@property (nonatomic, strong) NSMutableArray *productsArray;
 @property (nonatomic, strong) NSMutableArray *purchasableObjects;
 @property (nonatomic, strong) NSMutableDictionary *subscriptionProducts;
 #ifdef __IPHONE_6_0
@@ -81,6 +82,7 @@
 - (BOOL) canConsumeProduct:(NSString*) productName quantity:(int) quantity;
 - (BOOL) consumeProduct:(NSString*) productName quantity:(int) quantity;
 - (BOOL) isSubscriptionActive:(NSString*) featureId;
+- (void) requestProductData;
 
 // for testing proposes you can use this method to remove all the saved keychain data (saved purchases, etc.)
 - (BOOL) removeAllKeychainData;
