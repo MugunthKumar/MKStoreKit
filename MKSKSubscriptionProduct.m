@@ -70,7 +70,7 @@
 	
   NSString *receiptString = [NSString stringWithFormat:@"{\"receipt-data\":\"%@\" \"password\":\"%@\"}", [self.receipt base64EncodedString], kSharedSecret];        
   
-	NSString *length = [NSString stringWithFormat:@"%d", [receiptString length]];	
+	NSString *length = [NSString stringWithFormat:@"%lu", (unsigned long)[receiptString length]];	
 	[theRequest setValue:length forHTTPHeaderField:@"Content-Length"];	
 	
 	[theRequest setHTTPBody:[receiptString dataUsingEncoding:NSUTF8StringEncoding]];
