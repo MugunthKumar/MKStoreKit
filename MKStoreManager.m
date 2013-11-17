@@ -605,6 +605,10 @@ static MKStoreManager* _sharedStoreManager;
             forReceipt:(NSData*) receiptData
          hostedContent:(NSArray*) hostedContent
 {
+  if (!productIdentifier) {
+    NSLog(@"productIdentifier is nil; Apple bug?");
+    return;
+  }
   MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:productIdentifier];
   if(subscriptionProduct)
   {
