@@ -76,7 +76,7 @@ static unsigned char base64DecodeLookup[256] =
 // returns the decoded buffer. Must be free'd by caller. Length is given by
 //	outputLength.
 //
-void *NewBase64Decode(
+void *MKNK_NewBase64Decode(
 	const char *inputBuffer,
 	size_t length,
 	size_t *outputLength)
@@ -151,7 +151,7 @@ void *NewBase64Decode(
 // returns the encoded buffer. Must be free'd by caller. Length is given by
 //	outputLength.
 //
-char *NewBase64Encode(
+char *MKNK_NewBase64Encode(
 	const void *buffer,
 	size_t length,
 	bool separateLines,
@@ -279,7 +279,7 @@ char *NewBase64Encode(
 {
 	NSData *data = [aString dataUsingEncoding:NSASCIIStringEncoding];
 	size_t outputLength;
-	void *outputBuffer = NewBase64Decode([data bytes], [data length], &outputLength);
+	void *outputBuffer = MKNK_NewBase64Decode([data bytes], [data length], &outputLength);
 	NSData *result = [NSData dataWithBytes:outputBuffer length:outputLength];
 	free(outputBuffer);
 	return result;
@@ -298,7 +298,7 @@ char *NewBase64Encode(
 {
 	size_t outputLength = 0;
 	char *outputBuffer =
-		NewBase64Encode([self bytes], [self length], false, &outputLength);
+		MKNK_NewBase64Encode([self bytes], [self length], false, &outputLength);
 	
 	NSString *result =
 		[[NSString alloc]
