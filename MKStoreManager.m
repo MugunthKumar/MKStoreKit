@@ -331,6 +331,8 @@ static MKStoreManager* _sharedStoreManager;
 {
   MKSKSubscriptionProduct *subscriptionProduct = [self.subscriptionProducts objectForKey:featureId];
   if(!subscriptionProduct.receipt) return NO;
+    
+  if (subscriptionProduct.subscriptionDays > 0) return [subscriptionProduct isSubscriptionActive]; // for non auto-renewables
   
   id jsonObject = [NSJSONSerialization JSONObjectWithData:subscriptionProduct.receipt options:NSJSONReadingAllowFragments error:nil];
   NSData *receiptData = [NSData dataFromBase64String:[jsonObject objectForKey:@"latest_receipt"]];
