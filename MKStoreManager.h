@@ -74,7 +74,11 @@
         onCancelled:(void (^)(void)) cancelBlock;
 
 // use this method to restore a purchase
-- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
+// - restoreCompletionBlock is called when the restore has been started; you are not required to do anything
+// - onComplete is called when content has been downloaded. Your content is available at download.contentURL, and you should
+//   copy and/or import it
+- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) restoreCompletionBlock
+                                    onComplete:(void (^)(NSString* purchasedFeature, NSData*purchasedReceipt, NSArray* availableDownloads)) completionBlock
                                        onError:(void (^)(NSError* error)) errorBlock;
 
 // For consumable support

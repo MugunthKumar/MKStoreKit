@@ -207,10 +207,12 @@ static MKStoreManager* _sharedStoreManager;
            @"MKStoreKitConfigs.plist"]];
 }
 
-- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) completionBlock
+- (void) restorePreviousTransactionsOnComplete:(void (^)(void)) restoreCompletionBlock
+                                                onComplete:(void (^)(NSString* purchasedFeature, NSData*purchasedReceipt, NSArray* availableDownloads)) completionBlock
                                        onError:(void (^)(NSError*)) errorBlock
 {
-  self.onRestoreCompleted = completionBlock;
+    self.onTransactionCompleted = completionBlock;
+    self.onRestoreCompleted = restoreCompletionBlock;
   self.onRestoreFailed = errorBlock;
   
 	[[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
