@@ -333,8 +333,15 @@ static MKStoreManager* _sharedStoreManager;
   if(!subscriptionProduct.receipt) return NO;
   
   id jsonObject = [NSJSONSerialization JSONObjectWithData:subscriptionProduct.receipt options:NSJSONReadingAllowFragments error:nil];
-  NSData *receiptData = [NSData dataFromBase64String:[jsonObject objectForKey:@"latest_receipt"]];
-  
+  NSData *receiptData;
+    
+  if ( jsonObject ) {
+    receiptData = [NSData dataFromBase64String:[jsonObject objectForKey:@"latest_receipt"]];
+  }
+  else {
+    receiptData = subscriptionProduct.receipt;
+  }
+
   NSPropertyListFormat plistFormat;
   NSDictionary *payloadDict = [NSPropertyListSerialization propertyListWithData:receiptData
                                                                         options:NSPropertyListImmutable
