@@ -130,7 +130,7 @@ It can't get simpler than this!
 * Mac OS X support
 
 
-These two features might work, but they are not tested yet.
+These three features might work, but they are not tested yet.
 
 
 ###Licensing
