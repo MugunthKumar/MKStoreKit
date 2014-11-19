@@ -1,9 +1,9 @@
 #MKStoreKit
 
 This is version 6.0 beta 1 of MKStoreKit. iOS 7+ only. 
-MKStoreKit 6 is not API compatible with previous versions of MKStoreKit.Refactoring should however be fairly simple.
+MKStoreKit 6 is a **complete revamp** is not API compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple.
 
-The code base is still in early beta. Use with caution
+*The code base is still in early beta. Use with caution*
 
 The source code contains just three files, MKStoreKit.h/m and MKStoreKitConfigs.plist
 The MKStoreKit is a singleton class that takes care of *everything*. Just drag these four files into the project. You then have to initialize it by calling [[MKStoreKit sharedKit] startProductRequest] in your application:didFinishLaunchingWithOptions. From then on, it does the magic. The MKStoreKit purchases, remembers and even handles remote validation of auto-renewable subscriptions.
