@@ -34,18 +34,64 @@ Initialization is as simple as calling
 [[MKStoreKit sharedKit] startProductRequest]
 ```
 
+A sample initialziation code that you can add to your application:didFinishLaunchingWithOptions: is below
+
+``` objective-c
+  [[MKStoreKit sharedKit] startProductRequest];
+  
+  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductsAvailableNotification
+                                                    object:nil
+                                                     queue:[[NSOperationQueue alloc] init]
+                                                usingBlock:^(NSNotification *note) {
+    
+    NSLog(@"Products available: %@", [[MKStoreKit sharedKit] availableProducts]);
+  }];
+  
+  
+  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
+                                                    object:nil
+                                                     queue:[[NSOperationQueue alloc] init]
+                                                usingBlock:^(NSNotification *note) {
+                                                  
+                                                  NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
+                                                }];
+  
+  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoredPurchasesNotification
+                                                    object:nil
+                                                     queue:[[NSOperationQueue alloc] init]
+                                                usingBlock:^(NSNotification *note) {
+                                                  
+                                                  NSLog(@"Restored Purchases");
+                                                }];
+  
+  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoringPurchasesFailedNotification
+                                                    object:nil
+                                                     queue:[[NSOperationQueue alloc] init]
+                                                usingBlock:^(NSNotification *note) {
+                                                  
+                                                  NSLog(@"Failed restoring purchases with error: %@", [note object]);
+                                                }];
+```
+
+###Checking Product Status
+You can check if a product was previously purchased using -isProductPurchased as shown below.
 ``` objective-c
 if([MKStoreManager isProductPurchased:productIdentifier]) {
 //unlock it
 }
 ```
 
+You can check for a product's expiry date using -expiryDateForProduct as shown below.
 ``` objective-c
 if([MKStoreManager expiryDateForProduct:productIdentifier]) {
 //unlock it
 }
 ```
 
+Warning: This method will return []NSNull null] for products that are not auto-renewing subscriptions.
+
+
+###Making a Purchase
 To purchase a feature or to subscribe to a auto-renewing subscription, just call
 
 ``` objective-c
@@ -67,7 +113,7 @@ Observe kMKStoreKitProductPurchasedNotification to get notified when the purchas
                                                 }];
 ```
 
-It’s that simple with MKStoreKit. 
+It can't get simpler than this!
 
 
 ## Missing Features
