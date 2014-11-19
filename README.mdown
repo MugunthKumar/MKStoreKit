@@ -72,6 +72,7 @@ It’s that simple with MKStoreKit.
 
 ## Missing Features
 
+* Dynamically adding products to MKStoreKit from a remote resource
 * Keychain support for products
 * Support for hosted content
 * Local receipt verification using asn1c
