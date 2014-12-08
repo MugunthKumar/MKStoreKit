@@ -185,9 +185,11 @@ static NSDictionary *errorDictionary;
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[MKStoreKit configs][@"Consumables"] allKeys];
   NSArray *others = [MKStoreKit configs][@"Others"];
+  NSArray *nonConsumable = [MKStoreKit configs][@"Non-Consumables"];
   
   [productsArray addObjectsFromArray:consumables];
   [productsArray addObjectsFromArray:others];
+  [productsArray addObjectsFromArray:nonConsumable];
   
   SKProductsRequest *productsRequest = [[SKProductsRequest alloc]
                                         initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
