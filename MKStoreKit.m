@@ -415,8 +415,8 @@ static NSDictionary *errorDictionary;
           NSNumber *currentConsumableCount = self.purchaseRecord[consumableId];
           consumableCount = @([consumableCount doubleValue] + [currentConsumableCount doubleValue]);
           self.purchaseRecord[consumableId] = consumableCount;
-          [self savePurchaseRecord];
         }
+        [self savePurchaseRecord];
         [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchasedNotification
                                                             object:transaction.payment.productIdentifier];
       }
