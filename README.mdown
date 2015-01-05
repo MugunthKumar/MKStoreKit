@@ -26,6 +26,9 @@ Consumables is the key where you provide a list of consumables in your app that 
 Others is the key where you provide a list of in app purchasable products
 SharedSecret is the key where you provide the shared secret generated on your iTunesConnect account.
 
+Here is a sample [MKStoreKitConfigs.plist](https://gist.github.com/MugunthKumar/330fc38b542c96fcecc6)
+
+
 ###Initialization
 
 Initialization is as simple as calling

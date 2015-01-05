@@ -50,18 +50,32 @@
  *  @abstract This notification is posted when MKStoreKit completes initialization sequence
  */
 extern NSString *const kMKStoreKitProductsAvailableNotification;
+
 /*!
  *  @abstract This notification is posted when MKStoreKit completes purchase of a product
  */
 extern NSString *const kMKStoreKitProductPurchasedNotification;
+
+/*!
+ *  @abstract This notification is posted when MKStoreKit failes to complete the purchase of a product
+ */
+extern NSString *const kMKStoreKitProductPurchaseFailedNotification;
+
 /*!
  *  @abstract This notification is posted when MKStoreKit completes restoring purchases
  */
 extern NSString *const kMKStoreKitRestoredPurchasesNotification;
+
 /*!
  *  @abstract This notification is posted when MKStoreKit fails to restore purchases
  */
 extern NSString *const kMKStoreKitRestoringPurchasesFailedNotification;
+
+/*!
+ *  @abstract This notification is posted when MKStoreKit fails to validate receipts
+ */
+extern NSString *const kMKStoreKitReceiptValidationFailedNotification;
+
 /*!
  *  @abstract This notification is posted when MKStoreKit detects expiration of a auto-renewing subscription
  */

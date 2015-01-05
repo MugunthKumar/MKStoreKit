@@ -41,8 +41,10 @@
 @import StoreKit;
 NSString *const kMKStoreKitProductsAvailableNotification = @"com.mugunthkumar.mkstorekit.productsavailable";
 NSString *const kMKStoreKitProductPurchasedNotification = @"com.mugunthkumar.mkstorekit.productspurchased";
+NSString *const kMKStoreKitProductPurchaseFailedNotification = @"com.mugunthkumar.mkstorekit.productspurchasefailed";
 NSString *const kMKStoreKitRestoredPurchasesNotification = @"com.mugunthkumar.mkstorekit.restoredpurchases";
 NSString *const kMKStoreKitRestoringPurchasesFailedNotification = @"com.mugunthkumar.mkstorekit.failedrestoringpurchases";
+NSString *const kMKStoreKitReceiptValidationFailedNotification = @"com.mugunthkumar.mkstorekit.failedvalidatingreceipts";
 NSString *const kMKStoreKitSubscriptionExpiredNotification = @"com.mugunthkumar.mkstorekit.subscriptionexpired";
 
 NSString *const kSandboxServer = @"https://sandbox.itunes.apple.com/verifyReceipt";
@@ -221,7 +223,7 @@ static NSDictionary *errorDictionary;
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
   
-  [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitRestoredPurchasesNotification
+  [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitRestoringPurchasesFailedNotification
                                                       object:error];
 }
 
@@ -326,6 +328,8 @@ static NSDictionary *errorDictionary;
     if(error) {
       
       NSLog(@"Receipt validation failed with error: %@", error);
+      [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitReceiptValidationFailedNotification
+                                                          object:error];
     } else {
       
       __block BOOL purchaseRecordDirty = NO;
@@ -404,7 +408,6 @@ static NSDictionary *errorDictionary;
         
         [queue finishTransaction:transaction];
         
-        self.purchaseRecord[transaction.payment.productIdentifier] = [NSNull null];
         NSDictionary *availableConsumables = [MKStoreKit configs][@"Consumables"];
         NSArray *consumables = [availableConsumables allKeys];
         if([consumables containsObject:transaction.payment.productIdentifier]) {
@@ -415,8 +418,12 @@ static NSDictionary *errorDictionary;
           NSNumber *currentConsumableCount = self.purchaseRecord[consumableId];
           consumableCount = @([consumableCount doubleValue] + [currentConsumableCount doubleValue]);
           self.purchaseRecord[consumableId] = consumableCount;
-          [self savePurchaseRecord];
+        } else {
+          // non-consumable or subscriptions
+          // subscriptions will eventually contain the expiry date after the receipt is validated during the next run
+          self.purchaseRecord[transaction.payment.productIdentifier] = [NSNull null];
         }
+        [self savePurchaseRecord];
         [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchasedNotification
                                                             object:transaction.payment.productIdentifier];
       }
@@ -429,6 +436,8 @@ static NSDictionary *errorDictionary;
   
   NSLog(@"Transaction Failed with error: %@", transaction.error);
   [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchaseFailedNotification
+                                                      object:transaction.payment.productIdentifier];
 }
 
 @end
