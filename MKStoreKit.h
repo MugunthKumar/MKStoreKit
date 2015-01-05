@@ -205,6 +205,21 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -isProductPurchased
  */
--(NSNumber*) consumeCredits:(NSNumber*) creditCountToConsume identifiedByConsumableIdentifier:(NSString*) consumableID;
+-(NSNumber*) consumeCredits:(NSNumber*) creditCountToConsume identifiedByConsumableIdentifier:(NSString*) consumableId;
+
+/*!
+ *  @abstract This method sets the default credits (managed by MKStoreKit) for a given consumable
+ *
+ *  @discussion
+ *	MKStoreKit provides a basic virtual currency manager for your consumables
+ *  This method should be called if you provide free credits to start with
+ *  A consumable ID is different from its product id, and it is configured in MKStoreKitConfigs.plist file
+ *  Observe kMKStoreKitProductPurchasedNotification to get notified when the purchase of the consumable completes
+ *
+ *  @seealso
+ *  -isProductPurchased
+ */
+-(void) setDefaultCredits:(NSNumber*) creditCount forConsumableIdentifier:(NSString*) consumableId;
+
 
 @end

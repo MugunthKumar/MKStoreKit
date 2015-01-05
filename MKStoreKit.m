@@ -179,6 +179,15 @@ static NSDictionary *errorDictionary;
   return currentConsumableCount;
 }
 
+-(void) setDefaultCredits:(NSNumber*) creditCount forConsumableIdentifier:(NSString*) consumableId {
+  
+  if(self.purchaseRecord[consumableId] == nil) {
+    
+    self.purchaseRecord[consumableId] = creditCount;
+    [self savePurchaseRecord];
+  }
+}
+
 #pragma mark -
 #pragma mark Start requesting for available in app purchases
 
