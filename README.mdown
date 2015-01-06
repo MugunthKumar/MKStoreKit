@@ -79,14 +79,14 @@ A sample initialziation code that you can add to your application:didFinishLaunc
 ###Checking Product Status
 You can check if a product was previously purchased using -isProductPurchased as shown below.
 ``` objective-c
-if([MKStoreManager isProductPurchased:productIdentifier]) {
+if([[MKStoreKit sharedKit] isProductPurchased:productIdentifier]) {
 //unlock it
 }
 ```
 
 You can check for a product's expiry date using -expiryDateForProduct as shown below.
 ``` objective-c
-if([MKStoreManager expiryDateForProduct:productIdentifier]) {
+if([[MKStoreKit sharedKit] expiryDateForProduct:productIdentifier]) {
 //unlock it
 }
 ```
