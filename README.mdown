@@ -10,9 +10,9 @@ MKStoreKit 6 is a **complete revamp**, and is not API compatible with previous v
 
 ## Setup
 The source code contains just three files:
-* 'MKStoreKit.h'
-* 'MKStoreKit.m'
-* 'MKStoreKitConfigs.plist'
+* `MKStoreKit.h`
+* `MKStoreKit.m`
+* `MKStoreKitConfigs.plist`
 
 The MKStoreKit is a singleton class that takes care of *everything*. 
 
