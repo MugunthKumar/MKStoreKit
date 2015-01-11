@@ -7,9 +7,9 @@ See the table below for details on MKStoreKit's requirements and compatibility.
 
 | Version | Stage  | Backwards Compatibility | iOS Version | OS X Version | Requires ARC |
 |:-------:|:------:|:-----------------------:|:-----------:|:------------:|:------------:|
-|   6.0   | Beta 1 | MKStoreKit Version 6.0  |   iOS 7.0   |    10.10 +   |      YES     |
+|   6.0   | Beta 1 | MKStoreKit Version 6.0  |  iOS 7.0 +  |    10.10 +   |      YES     |
 
-MKStoreKit 6 is a **complete revamp** of the project and is not compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple. See the *Earliest Compatible Version* column to determine backwards compatibility.
+MKStoreKit 6 is a **complete revamp** of the project and is not compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple. See the *Backwards Compatibility* column to determine the earliest comaptible version with the current release.
 
 *MKStoreKit 6 is still in early beta (see the Stage column). Use with caution*
 
