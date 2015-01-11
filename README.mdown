@@ -26,6 +26,7 @@ You then have to initialize it by calling `[[MKStoreKit sharedKit] startProductR
 * Built-in receipt validation (remote)
 * Built-in virtual currency manager
 * Support for iOS 8 Deferred Purchases, "Ask to Buy"
+* Works on iOS and Mac OS X
 
 ## Sample Code 
 
@@ -136,16 +137,14 @@ It can't get simpler than this!
 * Dynamically adding products to MKStoreKit from a remote resource
 * Keychain support for products
 * Support for hosted content
-* Local receipt verification using asn1c
+* Local receipt verification using ASN1C
 
 ## Untested Features
 
 * Non-renewing subscriptions
-* Free subscriptions for news stand
-* Mac OS X support
+* Free subscriptions for Newsstand
 
-
-These three features might work, but they are not tested yet.
+These two features might work, but they are not tested yet.
 
 
 ###Licensing
