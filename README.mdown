@@ -1,12 +1,24 @@
 #MKStoreKit
 
-This is version 6.0 beta 1 of MKStoreKit. iOS 7+ only. 
-MKStoreKit 6 is a **complete revamp** is not API compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple.
+An in-App Purchase framework for iOS 7.0+. **MKStoreKit** makes in-App Purchasing super simple by remembering your purchases, validating reciepts, and tracking virtual currencies (consumable purchases). Additionally, it keeps track of auto-renewable subscriptions and their expirationd dates. It couldn't be easier!
+
+## Compatibility
+This is version 6.0 beta 1 of MKStoreKit. iOS 7.0+ only. 
+MKStoreKit 6 is a **complete revamp**, and is not API compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple.
 
 *The code base is still in early beta. Use with caution*
 
-The source code contains just three files, MKStoreKit.h/m and MKStoreKitConfigs.plist
-The MKStoreKit is a singleton class that takes care of *everything*. Just drag these four files into the project. You then have to initialize it by calling [[MKStoreKit sharedKit] startProductRequest] in your application:didFinishLaunchingWithOptions. From then on, it does the magic. The MKStoreKit purchases, remembers and even handles remote validation of auto-renewable subscriptions.
+## Setup
+The source code contains just three files:
+* 'MKStoreKit.h'
+* 'MKStoreKit.m'
+* 'MKStoreKitConfigs.plist'
+
+The MKStoreKit is a singleton class that takes care of *everything*. 
+
+Just drag these three files into the project. 
+
+You then have to initialize it by calling `[[MKStoreKit sharedKit] startProductRequest]` in your `application:didFinishLaunchingWithOptions`. From then on, it does the magic. The MKStoreKit purchases, remembers and even handles remote validation of auto-renewable subscriptions.
 
 ## Features
 * Super simple in app purchasing
@@ -40,54 +52,54 @@ Initialization is as simple as calling
 A sample initialziation code that you can add to your application:didFinishLaunchingWithOptions: is below
 
 ``` objective-c
-  [[MKStoreKit sharedKit] startProductRequest];
+[[MKStoreKit sharedKit] startProductRequest];
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductsAvailableNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductsAvailableNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
     
-    NSLog(@"Products available: %@", [[MKStoreKit sharedKit] availableProducts]);
-  }];
+                                                NSLog(@"Products available: %@", [[MKStoreKit sharedKit] availableProducts]);
+                                              }];
   
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
-                                                  NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
-                                                }];
+                                                NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
+                                              }];
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoredPurchasesNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoredPurchasesNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
-                                                  NSLog(@"Restored Purchases");
-                                                }];
+                                                NSLog(@"Restored Purchases");
+                                              }];
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoringPurchasesFailedNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoringPurchasesFailedNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
-                                                  NSLog(@"Failed restoring purchases with error: %@", [note object]);
-                                                }];
+                                                 NSLog(@"Failed restoring purchases with error: %@", [note object]);
+                                              }];
 ```
 
 ###Checking Product Status
 You can check if a product was previously purchased using -isProductPurchased as shown below.
 ``` objective-c
-if([MKStoreManager isProductPurchased:productIdentifier]) {
-//unlock it
+if ([[MKStoreKit sharedKit] isProductPurchased:productIdentifier]) {
+        // Unlock it
 }
 ```
 
 You can check for a product's expiry date using -expiryDateForProduct as shown below.
 ``` objective-c
-if([MKStoreManager expiryDateForProduct:productIdentifier]) {
-//unlock it
+if ([[MKStoreKit sharedKit] expiryDateForProduct:productIdentifier]) {
+        // Unlock it
 }
 ```
 
@@ -104,16 +116,15 @@ To purchase a feature or to subscribe to a auto-renewing subscription, just call
 Observe kMKStoreKitProductPurchasedNotification to get notified when the purchase completes
 
 ``` objective-c
-
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
                                                   NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
                                                   
                                                   NSLog(@"%@", [[MKStoreKit sharedKit] valueForKey:@"purchaseRecord"]);
-                                                }];
+                                              }];
 ```
 
 It can't get simpler than this!
