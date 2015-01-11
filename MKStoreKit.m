@@ -70,9 +70,15 @@ static NSDictionary *errorDictionary;
             _sharedKit = [[super allocWithZone:nil] init];
             [[SKPaymentQueue defaultQueue] addTransactionObserver:_sharedKit];
             [_sharedKit restorePurchaseRecord];
+#if TARGET_OS_IPHONE
             [[NSNotificationCenter defaultCenter] addObserver:_sharedKit
                                                      selector:@selector(savePurchaseRecord)
                                                          name:UIApplicationDidEnterBackgroundNotification object:nil];
+#elif TARGET_OS_MAC
+            [[NSNotificationCenter defaultCenter] addObserver:_sharedKit
+                                                     selector:@selector(savePurchaseRecord)
+                                                         name:NSApplicationDidResignActiveNotification object:nil];
+#endif
             
             [_sharedKit startValidatingReceiptsAndUpdateLocalStore];
         });
@@ -131,7 +137,11 @@ static NSDictionary *errorDictionary;
 - (void)savePurchaseRecord {
     NSError *error = nil;
     NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self.purchaseRecord];
+#if TARGET_OS_IPHONE
     BOOL success = [data writeToFile:[self purchaseRecordFilePath] options:NSDataWritingAtomic | NSDataWritingFileProtectionComplete error:&error];
+#elif TARGET_OS_MAC
+    BOOL success = [data writeToFile:[self purchaseRecordFilePath] options:NSDataWritingAtomic error:&error];
+#endif
     
     if (!success) {
         NSLog(@"Failed to remember data record");
@@ -226,16 +236,22 @@ static NSDictionary *errorDictionary;
     if (!self.availableProducts) {
         // TODO: FIX ME
         // Initializer might be running or internet might not be available
-        NSLog(@"No products are available. Did you initialize MKStoreKit by calling [[MKStoreManager sharedManager] startProductRequest]?");
+        NSLog(@"No products are available. Did you initialize MKStoreKit by calling [[MKStoreKit sharedKit] startProductRequest]?");
     }
     
     if (![SKPaymentQueue canMakePayments]) {
+#if TARGET_OS_IPHONE
         [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"In App Purchasing Disabled", @"")
                                     message:NSLocalizedString(@"Check your parental control settings and try again later", @"")
                                    delegate:self
                           cancelButtonTitle:NSLocalizedString(@"Okay", @"")
                           otherButtonTitles:nil] show];
-        
+#elif TARGET_OS_MAC
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.messageText = NSLocalizedString(@"In App Purchasing Disabled", @"");
+        alert.informativeText = NSLocalizedString(@"Check your parental control settings and try again later", @"");
+        [alert runModal];
+#endif
         return;
     }
     
@@ -353,6 +369,7 @@ static NSDictionary *errorDictionary;
 // TODO: FIX ME
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads {
     [downloads enumerateObjectsUsingBlock:^(SKDownload *thisDownload, NSUInteger idx, BOOL *stop) {
+#if TARGET_OS_IPHONE
         switch (thisDownload.downloadState) {
             case SKDownloadStateActive:
                 break;
@@ -361,6 +378,16 @@ static NSDictionary *errorDictionary;
             default:
                 break;
         }
+#elif TARGET_OS_MAC
+        switch (thisDownload.state) {
+            case SKDownloadStateActive:
+                break;
+            case SKDownloadStateFinished:
+                break;
+            default:
+                break;
+        }
+#endif
     }];
 }
 

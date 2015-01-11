@@ -36,14 +36,25 @@
 //  A note on redistribution
 //	if you are re-publishing after editing, please retain the above copyright notices
 
-#import <Foundation/Foundation.h>
+#if TARGET_OS_IPHONE
+    #import <Foundation/Foundation.h>
 
-#if ! __has_feature(objc_arc)
-#error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+    #ifndef __IPHONE_7_0
+        #error "MKStoreKit is only supported on iOS 7 or later."
+    #endif
+
+#else
+    #import <Foundation/Foundation.h>
+    #import <Cocoa/Cocoa.h>
+
+    #ifndef __MAC_10_10
+        #error "MKStoreKit is only supported on OS X 10.10 or later."
+    #endif
+
 #endif
 
-#ifndef __IPHONE_7_0
-#error "MKStoreKit is supported only on iOS 7 or later."
+#if ! __has_feature(objc_arc)
+    #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 
 /*!
@@ -70,7 +81,7 @@ extern NSString *const kMKStoreKitProductPurchaseFailedNotification;
  *   to be notified of the completed or failed purchase.
  *  @availability iOS 8.0 or later
  */
-extern NSString *const kMKStoreKitProductPurchaseDeferredNotification NS_AVAILABLE_IOS(8_0);
+extern NSString *const kMKStoreKitProductPurchaseDeferredNotification NS_AVAILABLE(10_10, 8_0);
 
 /*!
  *  @abstract This notification is posted when MKStoreKit completes restoring purchases
@@ -119,7 +130,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @discussion
  *	Use this to access the only object of MKStoreKit
  */
-+ (MKStoreKit*) sharedKit;
++ (MKStoreKit *)sharedKit;
 
 /*!
  *  @abstract Initializes MKStoreKit singleton by making the product request using StoreKit's SKProductRequest
@@ -134,7 +145,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -availableProducts
  */
-- (void) startProductRequest;
+- (void)startProductRequest;
 
 /*!
  *  @abstract Restores In App Purchases made on other devices
@@ -142,7 +153,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @discussion
  *	This method restores your user's In App Purchases made on other devices.
  */
-- (void) restorePurchases;
+- (void)restorePurchases;
 
 /*!
  *  @abstract Initiates payment request for a In App Purchasable Product
@@ -156,7 +167,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  -isProductPurchased
  *  -expiryDateForProduct
  */
-- (void) initiatePaymentRequestForProductWithIdentifier:(NSString*) productId;
+- (void)initiatePaymentRequestForProductWithIdentifier:(NSString *)productId;
 
 /*!
  *  @abstract Checks whether the product identified by the given productId is purchased previously
@@ -169,7 +180,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -expiryDateForProduct
  */
-- (BOOL) isProductPurchased:(NSString*) productId;
+- (BOOL)isProductPurchased:(NSString *)productId;
 
 /*!
  *  @abstract Checks the expiry date for the product identified by the given productId
@@ -188,7 +199,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -isProductPurchased
  */
-- (NSDate*) expiryDateForProduct:(NSString*) productId;
+- (NSDate *)expiryDateForProduct:(NSString *)productId;
 
 /*!
  *  @abstract This method returns the available credits (managed by MKStoreKit) for a given consumable
@@ -202,7 +213,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -isProductPurchased
  */
-- (NSNumber*) availableCreditsForConsumable:(NSString*) consumableID;
+- (NSNumber *)availableCreditsForConsumable:(NSString *)consumableID;
 
 /*!
  *  @abstract This method updates the available credits (managed by MKStoreKit) for a given consumable
@@ -216,7 +227,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -isProductPurchased
  */
-- (NSNumber*) consumeCredits:(NSNumber*) creditCountToConsume identifiedByConsumableIdentifier:(NSString*) consumableId;
+- (NSNumber *)consumeCredits:(NSNumber *)creditCountToConsume identifiedByConsumableIdentifier:(NSString *)consumableId;
 
 /*!
  *  @abstract This method sets the default credits (managed by MKStoreKit) for a given consumable
@@ -230,7 +241,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @seealso
  *  -isProductPurchased
  */
-- (void) setDefaultCredits:(NSNumber*) creditCount forConsumableIdentifier:(NSString*) consumableId;
+- (void)setDefaultCredits:(NSNumber *)creditCount forConsumableIdentifier:(NSString *)consumableId;
 
 
 @end
