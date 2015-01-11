@@ -25,6 +25,7 @@ You then have to initialize it by calling `[[MKStoreKit sharedKit] startProductR
 * Built-in support for remembering your purchases
 * Built-in receipt validation (remote)
 * Built-in virtual currency manager
+* Support for iOS 8 Deferred Purchases, "Ask to Buy"
 
 ## Sample Code 
 
@@ -136,7 +137,6 @@ It can't get simpler than this!
 * Keychain support for products
 * Support for hosted content
 * Local receipt verification using asn1c
-* Support for iOS 8's "Ask to buy" (SKPaymentTransactionStateDeferred)
 
 ## Untested Features
 
