@@ -3,10 +3,15 @@
 An in-App Purchase framework for iOS 7.0+. **MKStoreKit** makes in-App Purchasing super simple by remembering your purchases, validating reciepts, and tracking virtual currencies (consumable purchases). Additionally, it keeps track of auto-renewable subscriptions and their expirationd dates. It couldn't be easier!
 
 ## Compatibility
-This is version 6.0 beta 1 of MKStoreKit. iOS 7.0+ only. 
-MKStoreKit 6 is a **complete revamp**, and is not API compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple.
+See the table below for details on MKStoreKit's requirements and compatibility.
 
-*The code base is still in early beta. Use with caution*
+| Version | Stage  | Earliest Compatible Version | iOS Version | OS X Version | Requires ARC |
+|:-------:|:------:|:---------------------------:|:-----------:|:------------:|:------------:|
+|   6.0   | Beta 1 |    MKStoreKit Version 6.0   |  iOS 7.0 +  | OS X 10.10 + |      YES     |
+
+MKStoreKit 6 is a **complete revamp** of the project and is not compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple. See the *Earliest Compatible Version* column to determine backwards compatibility.
+
+*MKStoreKit 6 is still in early beta (see the Stage column). Use with caution*
 
 ## Setup
 The source code contains just three files:
