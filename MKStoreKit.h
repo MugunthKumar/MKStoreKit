@@ -53,8 +53,10 @@
 
 #endif
 
-#if ! __has_feature(objc_arc)
-    #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#ifdef __OBJC__
+    #if ! __has_feature(objc_arc)
+        #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+    #endif
 #endif
 
 /*!
