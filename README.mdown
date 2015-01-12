@@ -151,7 +151,9 @@ It can't get simpler than this!
 
 These two features might work, but they are not tested yet.
 
-
+## Contributors 
+ * [Sam Spencer](https://github.com/Sam-Spencer) for making MKStoreKit Mac compatible.
+ 
 ###Licensing
 
 MKStoreKit is licensed under MIT License
