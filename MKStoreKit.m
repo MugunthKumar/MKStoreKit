@@ -51,6 +51,8 @@ NSString *const kMKStoreKitSubscriptionExpiredNotification = @"com.mugunthkumar.
 NSString *const kSandboxServer = @"https://sandbox.itunes.apple.com/verifyReceipt";
 NSString *const kLiveServer = @"https://buy.itunes.apple.com/verifyReceipt";
 
+NSString *const kOriginalAppVersionKey = @"SKOrigBundleRef"; // Obfuscating record key name
+
 static NSDictionary *errorDictionary;
 
 @interface MKStoreKit (/*Private Methods*/) <SKProductsRequestDelegate, SKPaymentTransactionObserver>
@@ -64,7 +66,7 @@ static NSDictionary *errorDictionary;
 
 + (MKStoreKit *)sharedKit {
     static MKStoreKit *_sharedKit;
-    if(!_sharedKit) {
+    if (!_sharedKit) {
         static dispatch_once_t oncePredicate;
         dispatch_once(&oncePredicate, ^{
             _sharedKit = [[super allocWithZone:nil] init];
@@ -88,12 +90,10 @@ static NSDictionary *errorDictionary;
 }
 
 + (id)allocWithZone:(NSZone *)zone {
-    
     return [self sharedKit];
 }
 
 - (id)copyWithZone:(NSZone *)zone {
-    
     return self;
 }
 
@@ -108,7 +108,8 @@ static NSDictionary *errorDictionary;
                         @(21005) : @"The receipt server is not currently available.",
                         @(21006) : @"This receipt is valid but the subscription has expired.",
                         @(21007) : @"This receipt is from the test environment.",
-                        @(21008) : @"This receipt is from the production environment."};
+                        @(21008) : @"This receipt is from the production environment.",
+                        @(21009) : @"The receipt does not exist."};
 }
 
 #pragma mark -
@@ -175,9 +176,7 @@ static NSDictionary *errorDictionary;
 }
 
 - (void)setDefaultCredits:(NSNumber *)creditCount forConsumableIdentifier:(NSString *)consumableId {
-    
-    if(self.purchaseRecord[consumableId] == nil) {
-        
+    if (self.purchaseRecord[consumableId] == nil) {
         self.purchaseRecord[consumableId] = creditCount;
         [self savePurchaseRecord];
     }
@@ -267,9 +266,41 @@ static NSDictionary *errorDictionary;
 #pragma mark -
 #pragma mark Receipt validation
 
+- (void)refreshAppStoreReceipt {
+    SKReceiptRefreshRequest *refreshReceiptRequest = [[SKReceiptRefreshRequest alloc] initWithReceiptProperties:nil];
+    refreshReceiptRequest.delegate = self;
+    [refreshReceiptRequest start];
+}
+
+- (void)requestDidFinish:(SKRequest *)request {
+    // SKReceiptRefreshRequest
+    NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[receiptUrl path]]) {
+        NSLog(@"App receipt exists. Preparing to validate and update local stores.");
+        [self startValidatingReceiptsAndUpdateLocalStore];
+    } else {
+        NSLog(@"Receipt request completed but there is no receipt. The user may have refused to login, or the reciept is missing.");
+        // Disable features of your app, but do not terminate the app
+    }
+}
+
 - (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler {
-    NSData *receiptData = [NSData dataWithContentsOfURL:[[NSBundle mainBundle] appStoreReceiptURL]];
+    NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
+    NSError *receiptError;
+    BOOL isPresent = [receiptURL checkResourceIsReachableAndReturnError:&receiptError];
+    if (!isPresent) {
+        // Validation fails
+        NSLog(@"No receipt exists. Try refreshing the reciept payload. If this issue persists it is likely the app is not authentic.");
+        NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:21009
+                                         userInfo:@{NSLocalizedDescriptionKey : @"The reciept does not exist."}];
+        completionHandler(nil, error);
+        return;
+    }
+    
+    NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
     if (!receiptData) {
+        // Validation fails
+        NSLog(@"Receipt exists but there is no data available. Try refreshing the reciept payload and then checking again.");
         completionHandler(nil, nil);
         return;
     }
@@ -280,16 +311,12 @@ static NSDictionary *errorDictionary;
     NSString *sharedSecret = [MKStoreKit configs][@"SharedSecret"];
     if (sharedSecret) requestContents[@"password"] = sharedSecret;
     
-    NSData *requestData = [NSJSONSerialization dataWithJSONObject:requestContents
-                                                          options:0
-                                                            error:&error];
+    NSData *requestData = [NSJSONSerialization dataWithJSONObject:requestContents options:0 error:&error];
     
 #ifdef DEBUG
-    NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:
-                                         [NSURL URLWithString:kSandboxServer]];
+    NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:kSandboxServer]];
 #else
-    NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:
-                                         [NSURL URLWithString:kLiveServer]];
+    NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:kLiveServer]];
 #endif
     
     [storeRequest setHTTPMethod:@"POST"];
@@ -297,49 +324,52 @@ static NSDictionary *errorDictionary;
     
     NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
     
-    [[session dataTaskWithRequest:storeRequest
-                completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-                    
-                    if (!error) {
-                        NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-                        NSInteger status = [jsonResponse[@"status"] integerValue];
-                        if(status != 0) {
-                            NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit"
-                                                                 code:status
-                                                             userInfo:@{NSLocalizedDescriptionKey : errorDictionary[@(status)]}];
-                            completionHandler(nil, error);
-                        } else {
-                            
-                            NSMutableArray *receipts = [jsonResponse[@"latest_receipt_info"] mutableCopy];
-                            NSArray *inAppReceipts = jsonResponse[@"receipt"][@"in_app"];
-                            [receipts addObjectsFromArray:inAppReceipts];
-                            completionHandler(receipts, nil);
-                        }
-                    } else {
-                        completionHandler(nil, error);
-                    }
-                }] resume];
+    [[session dataTaskWithRequest:storeRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (!error) {
+            NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+            NSInteger status = [jsonResponse[@"status"] integerValue];
+            NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
+            [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
+            [self savePurchaseRecord];
+            
+            if (status != 0) {
+                NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:status
+                                                 userInfo:@{NSLocalizedDescriptionKey : errorDictionary[@(status)]}];
+                completionHandler(nil, error);
+            } else {
+                NSMutableArray *receipts = [jsonResponse[@"latest_receipt_info"] mutableCopy];
+                NSArray *inAppReceipts = jsonResponse[@"receipt"][@"in_app"];
+                [receipts addObjectsFromArray:inAppReceipts];
+                completionHandler(receipts, nil);
+            }
+        } else {
+            completionHandler(nil, error);
+        }
+    }] resume];
+}
+
+- (BOOL)purchasedAppBeforeVersion:(NSString *)requiredVersion {
+    NSString *actualVersion = [self.purchaseRecord objectForKey:kOriginalAppVersionKey];
+    
+    if ([requiredVersion compare:actualVersion options:NSNumericSearch] == NSOrderedDescending) {
+        // actualVersion is lower than the requiredVersion
+        return YES;
+    } else return NO;
 }
 
 - (void)startValidatingReceiptsAndUpdateLocalStore {
-    
     [self startValidatingAppStoreReceiptWithCompletionHandler:^(NSArray *receipts, NSError *error) {
-        
         if (error) {
-            
             NSLog(@"Receipt validation failed with error: %@", error);
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitReceiptValidationFailedNotification
-                                                                object:error];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitReceiptValidationFailedNotification object:error];
         } else {
-            
             __block BOOL purchaseRecordDirty = NO;
             [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop) {
-                
                 NSString *productIdentifier = receiptDictionary[@"product_id"];
                 NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
-                if(expiresDateMs && ![expiresDateMs isKindOfClass: [NSNull class]]) {
-                    NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
-                    if([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+                NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
+                if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]] && ![previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]]) {
+                    if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
                         self.purchaseRecord[productIdentifier] = expiresDateMs;
                         purchaseRecordDirty = YES;
                     }
@@ -349,13 +379,9 @@ static NSDictionary *errorDictionary;
             if (purchaseRecordDirty) [self savePurchaseRecord];
             
             [self.purchaseRecord enumerateKeysAndObjectsUsingBlock:^(NSString *productIdentifier, NSNumber *expiresDateMs, BOOL *stop) {
-                
-                if(![expiresDateMs isKindOfClass: [NSNull class]]) {
-                    
-                    if([[NSDate date] timeIntervalSince1970] > [expiresDateMs doubleValue]) {
-                        
-                        [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionExpiredNotification
-                                                                            object:productIdentifier];
+                if (![expiresDateMs isKindOfClass: [NSNull class]]) {
+                    if ([[NSDate date] timeIntervalSince1970] > [expiresDateMs doubleValue]) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionExpiredNotification object:productIdentifier];
                     }
                 }
             }];
