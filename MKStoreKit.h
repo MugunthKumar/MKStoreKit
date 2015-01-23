@@ -36,6 +36,8 @@
 //  A note on redistribution
 //	if you are re-publishing after editing, please retain the above copyright notices
 
+#import "TargetConditionals.h"
+
 #if TARGET_OS_IPHONE
     #import <Foundation/Foundation.h>
 
@@ -53,10 +55,11 @@
 
 #endif
 
+#ifdef __OBJC__
 #if ! __has_feature(objc_arc)
     #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
-
+#endif
 /*!
  *  @abstract This notification is posted when MKStoreKit completes initialization sequence
  */
