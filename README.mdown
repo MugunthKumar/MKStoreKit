@@ -1,18 +1,37 @@
 #MKStoreKit
 
-This is version 6.0 beta 1 of MKStoreKit. iOS 7+ only. 
-MKStoreKit 6 is a **complete revamp** is not API compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple.
+An in-App Purchase framework for iOS 7.0+. **MKStoreKit** makes in-App Purchasing super simple by remembering your purchases, validating reciepts, and tracking virtual currencies (consumable purchases). Additionally, it keeps track of auto-renewable subscriptions and their expirationd dates. It couldn't be easier!
 
-*The code base is still in early beta. Use with caution*
+## Compatibility
+See the table below for details on MKStoreKit's requirements and compatibility.
 
-The source code contains just three files, MKStoreKit.h/m and MKStoreKitConfigs.plist
-The MKStoreKit is a singleton class that takes care of *everything*. Just drag these four files into the project. You then have to initialize it by calling [[MKStoreKit sharedKit] startProductRequest] in your application:didFinishLaunchingWithOptions. From then on, it does the magic. The MKStoreKit purchases, remembers and even handles remote validation of auto-renewable subscriptions.
+| Version | Stage  | Backwards Compatibility | iOS Version | OS X Version | Requires ARC |
+|:-------:|:------:|:-----------------------:|:-----------:|:------------:|:------------:|
+|   6.0   | Beta 1 | MKStoreKit Version 6.0  |  iOS 7.0 +  |    10.10 +   |      YES     |
+
+MKStoreKit 6 is a **complete revamp** of the project and is not compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple. See the *Backwards Compatibility* column to determine the earliest comaptible version with the current release.
+
+*MKStoreKit 6 is still in early beta (see the Stage column). Use with caution*
+
+## Setup
+The source code contains just three files:
+* `MKStoreKit.h`
+* `MKStoreKit.m`
+* `MKStoreKitConfigs.plist`
+
+The MKStoreKit is a singleton class that takes care of *everything*. 
+
+Just drag these three files into the project. 
+
+You then have to initialize it by calling `[[MKStoreKit sharedKit] startProductRequest]` in your `application:didFinishLaunchingWithOptions`. From then on, it does the magic. The MKStoreKit purchases, remembers and even handles remote validation of auto-renewable subscriptions.
 
 ## Features
 * Super simple in app purchasing
 * Built-in support for remembering your purchases
 * Built-in receipt validation (remote)
 * Built-in virtual currency manager
+* Support for iOS 8 Deferred Purchases, "Ask to Buy"
+* Works on iOS and Mac OS X
 
 ## Sample Code 
 
@@ -40,54 +59,54 @@ Initialization is as simple as calling
 A sample initialziation code that you can add to your application:didFinishLaunchingWithOptions: is below
 
 ``` objective-c
-  [[MKStoreKit sharedKit] startProductRequest];
+[[MKStoreKit sharedKit] startProductRequest];
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductsAvailableNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductsAvailableNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
     
-    NSLog(@"Products available: %@", [[MKStoreKit sharedKit] availableProducts]);
-  }];
+                                                NSLog(@"Products available: %@", [[MKStoreKit sharedKit] availableProducts]);
+                                              }];
   
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
-                                                  NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
-                                                }];
+                                                NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
+                                              }];
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoredPurchasesNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoredPurchasesNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
-                                                  NSLog(@"Restored Purchases");
-                                                }];
+                                                NSLog(@"Restored Purchases");
+                                              }];
   
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoringPurchasesFailedNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitRestoringPurchasesFailedNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
-                                                  NSLog(@"Failed restoring purchases with error: %@", [note object]);
-                                                }];
+                                                 NSLog(@"Failed restoring purchases with error: %@", [note object]);
+                                              }];
 ```
 
 ###Checking Product Status
 You can check if a product was previously purchased using -isProductPurchased as shown below.
 ``` objective-c
-if([MKStoreManager isProductPurchased:productIdentifier]) {
-//unlock it
+if ([[MKStoreKit sharedKit] isProductPurchased:productIdentifier]) {
+        // Unlock it
 }
 ```
 
 You can check for a product's expiry date using -expiryDateForProduct as shown below.
 ``` objective-c
-if([MKStoreManager expiryDateForProduct:productIdentifier]) {
-//unlock it
+if ([[MKStoreKit sharedKit] expiryDateForProduct:productIdentifier]) {
+        // Unlock it
 }
 ```
 
@@ -104,16 +123,15 @@ To purchase a feature or to subscribe to a auto-renewing subscription, just call
 Observe kMKStoreKitProductPurchasedNotification to get notified when the purchase completes
 
 ``` objective-c
-
-  [[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
-                                                    object:nil
-                                                     queue:[[NSOperationQueue alloc] init]
-                                                usingBlock:^(NSNotification *note) {
+[[NSNotificationCenter defaultCenter] addObserverForName:kMKStoreKitProductPurchasedNotification
+                                                  object:nil
+                                                   queue:[[NSOperationQueue alloc] init]
+                                              usingBlock:^(NSNotification *note) {
                                                   
                                                   NSLog(@"Purchased/Subscribed to product with id: %@", [note object]);
                                                   
                                                   NSLog(@"%@", [[MKStoreKit sharedKit] valueForKey:@"purchaseRecord"]);
-                                                }];
+                                              }];
 ```
 
 It can't get simpler than this!
@@ -124,19 +142,18 @@ It can't get simpler than this!
 * Dynamically adding products to MKStoreKit from a remote resource
 * Keychain support for products
 * Support for hosted content
-* Local receipt verification using asn1c
-* Support for iOS 8's "Ask to buy" (SKPaymentTransactionStateDeferred)
+* Local receipt verification using ASN1C
 
 ## Untested Features
 
 * Non-renewing subscriptions
-* Free subscriptions for news stand
-* Mac OS X support
+* Free subscriptions for Newsstand
 
+These two features might work, but they are not tested yet.
 
-These three features might work, but they are not tested yet.
-
-
+## Contributors 
+ * [Sam Spencer](https://github.com/Sam-Spencer) for making MKStoreKit Mac compatible.
+ 
 ###Licensing
 
 MKStoreKit is licensed under MIT License
