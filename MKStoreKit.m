@@ -162,7 +162,7 @@ static NSDictionary *errorDictionary;
 -(NSDate*) expiryDateForProduct:(NSString*) productId {
   
   NSNumber *expiresDateMs = self.purchaseRecord[productId];
-  return [NSDate dateWithTimeIntervalSince1970:[expiresDateMs doubleValue]];
+  return [NSDate dateWithTimeIntervalSince1970:[expiresDateMs doubleValue] / 1000.0f];
 }
 
 -(NSNumber*) availableCreditsForConsumable:(NSString*) consumableId {
