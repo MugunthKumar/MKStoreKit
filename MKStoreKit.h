@@ -159,6 +159,16 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 - (void)restorePurchases;
 
 /*!
+ *  @abstract Refreshes the App Store receipt and prompts the user to authenticate.
+ *
+ *  @discussion
+ *	This method can generate a reciept while debugging your application. In a production
+ *  environment this should only be used in an appropriate context because it will present
+ *  an App Store login alert to the user (without explanation).
+ */
+- (void)refreshAppStoreReceipt;
+
+/*!
  *  @abstract Initiates payment request for a In App Purchasable Product
  *
  *  @discussion
@@ -171,6 +181,20 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  -expiryDateForProduct
  */
 - (void)initiatePaymentRequestForProductWithIdentifier:(NSString *)productId;
+
+/*!
+ *  @abstract Checks whether the app version the user purchased is older than the required version
+ *
+ *  @discussion
+ *	This method checks against the local store maintained by MKStoreKit when the app was originally purchased
+ *  This method can be used to determine if a user should recieve a free upgrade. For example, apps transitioning
+ *  from a paid system to a freemium system can determine if users are "grandfathered-in" and exempt from extra
+ *  freemium purchases.
+ *
+ *  @seealso
+ *  -isProductPurchased
+ */
+- (BOOL)purchasedAppBeforeVersion:(NSString *)requiredVersion;
 
 /*!
  *  @abstract Checks whether the product identified by the given productId is purchased previously
