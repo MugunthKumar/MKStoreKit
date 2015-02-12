@@ -292,8 +292,7 @@ static NSDictionary *errorDictionary;
   NSError *receiptError;
   BOOL isPresent = [receiptURL checkResourceIsReachableAndReturnError:&receiptError];
   if (!isPresent) {
-    // Validation fails
-    NSLog(@"No receipt exists. Try refreshing the reciept payload. If this issue persists it is likely the app is not authentic.");
+    // No receipt - In App Purchase was never initiated
     NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:21009
                                      userInfo:@{NSLocalizedDescriptionKey : @"The reciept does not exist."}];
     completionHandler(nil, error);
