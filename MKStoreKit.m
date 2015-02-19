@@ -108,8 +108,7 @@ static NSDictionary *errorDictionary;
                       @(21005) : @"The receipt server is not currently available.",
                       @(21006) : @"This receipt is valid but the subscription has expired.",
                       @(21007) : @"This receipt is from the test environment.",
-                      @(21008) : @"This receipt is from the production environment.",
-                      @(21009) : @"The receipt does not exist."};
+                      @(21008) : @"This receipt is from the production environment."};
 }
 
 #pragma mark -
@@ -293,9 +292,7 @@ static NSDictionary *errorDictionary;
   BOOL isPresent = [receiptURL checkResourceIsReachableAndReturnError:&receiptError];
   if (!isPresent) {
     // No receipt - In App Purchase was never initiated
-    NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:21009
-                                     userInfo:@{NSLocalizedDescriptionKey : @"The reciept does not exist."}];
-    completionHandler(nil, error);
+    completionHandler(nil, nil);
     return;
   }
   
