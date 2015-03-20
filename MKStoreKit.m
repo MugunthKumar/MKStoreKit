@@ -458,7 +458,7 @@ static NSDictionary *errorDictionary;
         
         [self savePurchaseRecord];
         [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchasedNotification
-                                                            object:transaction.payment.productIdentifier];
+                                                            object:transaction];
       }
         break;
     }
