@@ -147,7 +147,7 @@ static NSDictionary *errorDictionary;
     NSLog(@"Failed to remember data record");
   }
   
-  NSLog(@"%@", self.purchaseRecord);
+  NSLog(@"purchased record: %@", self.purchaseRecord);
 }
 
 #pragma mark -
@@ -185,7 +185,8 @@ static NSDictionary *errorDictionary;
 #pragma mark -
 #pragma mark Start requesting for available in app purchases
 
-- (void)startProductRequest {
+- (void)startProductRequest
+{
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[MKStoreKit configs][@"Consumables"] allKeys];
   NSArray *others = [MKStoreKit configs][@"Others"];
@@ -199,7 +200,8 @@ static NSDictionary *errorDictionary;
   [productsRequest start];
 }
 
-- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
+- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
+{
   if (response.invalidProductIdentifiers.count > 0) {
     NSLog(@"Invalid Product IDs: %@", response.invalidProductIdentifiers);
   }
@@ -286,7 +288,8 @@ static NSDictionary *errorDictionary;
   }
 }
 
-- (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler {
+- (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler
+{
   NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
   NSError *receiptError;
   BOOL isPresent = [receiptURL checkResourceIsReachableAndReturnError:&receiptError];
@@ -328,7 +331,9 @@ static NSDictionary *errorDictionary;
       NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
       NSInteger status = [jsonResponse[@"status"] integerValue];
       NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
-      [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
+			if (originalAppVersion) {
+				[self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
+    	}
       [self savePurchaseRecord];
       
       if (status != 0) {
@@ -356,14 +361,17 @@ static NSDictionary *errorDictionary;
   } else return NO;
 }
 
-- (void)startValidatingReceiptsAndUpdateLocalStore {
-  [self startValidatingAppStoreReceiptWithCompletionHandler:^(NSArray *receipts, NSError *error) {
+- (void)startValidatingReceiptsAndUpdateLocalStore
+{
+  [self startValidatingAppStoreReceiptWithCompletionHandler:^(NSArray *receipts, NSError *error)
+	{
     if (error) {
       NSLog(@"Receipt validation failed with error: %@", error);
       [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitReceiptValidationFailedNotification object:error];
     } else {
       __block BOOL purchaseRecordDirty = NO;
-      [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop) {
+      [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop)
+			{
         NSString *productIdentifier = receiptDictionary[@"product_id"];
         NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
         NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
@@ -374,12 +382,15 @@ static NSDictionary *errorDictionary;
           }
         }
       }];
-      
-      if (purchaseRecordDirty) [self savePurchaseRecord];
-      
+			
+      if (purchaseRecordDirty)
+				[self savePurchaseRecord];
+			
       [self.purchaseRecord enumerateKeysAndObjectsUsingBlock:^(NSString *productIdentifier, NSNumber *expiresDateMs, BOOL *stop) {
-        if (![expiresDateMs isKindOfClass: [NSNull class]]) {
-          if ([[NSDate date] timeIntervalSince1970] > [expiresDateMs doubleValue]) {
+        if (![expiresDateMs isKindOfClass: [NSNull class]] && ![productIdentifier isEqualToString: kOriginalAppVersionKey])
+				{
+					// expiresDateMs is in milli-second, timeInterval is in second
+					if ([[NSDate date] timeIntervalSince1970] * 1000 > [expiresDateMs doubleValue]) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionExpiredNotification object:productIdentifier];
           }
         }
