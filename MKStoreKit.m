@@ -157,6 +157,13 @@ static NSDictionary *errorDictionary;
   return [self.purchaseRecord.allKeys containsObject:productId];
 }
 
+- (NSInteger)subscriptionDurationForProduct:(NSString *)productId {
+    NSDictionary *subscriptions = [MKStoreKit configs][@"Subscriptions"];
+    NSNumber *duration = subscriptions[productId];
+    if (nil == duration) return -1;
+    return [duration integerValue];
+}
+
 -(NSDate*) expiryDateForProduct:(NSString*) productId {
   
   NSNumber *expiresDateMs = self.purchaseRecord[productId];
@@ -189,10 +196,12 @@ static NSDictionary *errorDictionary;
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[MKStoreKit configs][@"Consumables"] allKeys];
   NSArray *others = [MKStoreKit configs][@"Others"];
-  
+  NSArray *subscriptions = [[MKStoreKit configs][@"Subscriptions"] allKeys];
+
   [productsArray addObjectsFromArray:consumables];
   [productsArray addObjectsFromArray:others];
-  
+  [productsArray addObjectsFromArray:subscriptions];
+
   SKProductsRequest *productsRequest = [[SKProductsRequest alloc]
                                         initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
   productsRequest.delegate = self;

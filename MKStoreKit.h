@@ -210,6 +210,17 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 - (BOOL)isProductPurchased:(NSString *)productId;
 
 /*!
+ *  @abstract Returns the duration of an auto-renewing subscription product
+ *
+ *  @discussion
+ *	This method reads the duration from MKStoreKitConfigs.plist
+ *
+ *  @seealso
+ *  -expiryDateForProduct
+ */
+- (NSInteger)subscriptionDurationForProduct:(NSString *)productId;
+
+/*!
  *  @abstract Checks the expiry date for the product identified by the given productId
  *
  *  @discussion
