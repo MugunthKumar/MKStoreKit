@@ -39,10 +39,11 @@ It's close to impossible to maintain a working sample code for MKStoreKit as iTu
 
 ###Config File Format
 MKStoreKit uses a config file, MKStoreKitConfigs.plist for managing your product identifiers.
-The config file is a Plist dictionary containing three keys, "Consumables", "Others" and "SharedSecret"
+The config file is a Plist dictionary containing three keys, "Consumables", "Subscriptions", "Others" and "SharedSecret"
 
-Consumables is the key where you provide a list of consumables in your app that should be managed as a virtual currency.
-Others is the key where you provide a list of in app purchasable products
+Consumables is the key where you provide a list of consumables in your app that should be managed as a virtual currency.  
+Subscriptions is the key where you provide a list of subscriptions and their durations.  
+Others is the key where you provide a list of in app purchasable products.  
 SharedSecret is the key where you provide the shared secret generated on your iTunesConnect account.
 
 Here is a sample [MKStoreKitConfigs.plist](https://gist.github.com/MugunthKumar/330fc38b542c96fcecc6)
