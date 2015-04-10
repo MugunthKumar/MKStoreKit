@@ -167,6 +167,7 @@ static NSDictionary *errorDictionary;
 -(NSDate*) expiryDateForProduct:(NSString*) productId {
   
   NSNumber *expiresDateMs = self.purchaseRecord[productId];
+  if (nil == expiresDateMs || [[NSNull null] isEqual:expiresDateMs]) return nil;
   return [NSDate dateWithTimeIntervalSince1970:[expiresDateMs doubleValue] / 1000.0f];
 }
 
