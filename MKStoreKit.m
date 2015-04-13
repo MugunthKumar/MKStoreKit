@@ -296,22 +296,20 @@ static NSDictionary *errorDictionary;
   }
 }
 
-- (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler {
+- (NSData *)receiptJSONData {
   NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
   NSError *receiptError;
   BOOL isPresent = [receiptURL checkResourceIsReachableAndReturnError:&receiptError];
   if (!isPresent) {
-    // No receipt - In App Purchase was never initiated
-    completionHandler(nil, nil);
-    return;
+    NSLog(@"No receipt in NSBundle.appStoreReceiptURL - In App Purchase was never initiated: %@", receiptError.localizedDescription);
+    return nil;
   }
-  
+
   NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
   if (!receiptData) {
     // Validation fails
     NSLog(@"Receipt exists but there is no data available. Try refreshing the reciept payload and then checking again.");
-    completionHandler(nil, nil);
-    return;
+    return nil;
   }
   
   NSError *error;
@@ -319,9 +317,19 @@ static NSDictionary *errorDictionary;
                                           [receiptData base64EncodedStringWithOptions:0] forKey:@"receipt-data"];
   NSString *sharedSecret = [MKStoreKit configs][@"SharedSecret"];
   if (sharedSecret) requestContents[@"password"] = sharedSecret;
-  
+
   NSData *requestData = [NSJSONSerialization dataWithJSONObject:requestContents options:0 error:&error];
-  
+
+  return requestData;
+}
+
+- (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler {
+    NSData *requestData = [self receiptJSONData];
+    if (nil == requestData) {
+        completionHandler(nil, nil);
+        return;
+    }
+
 #ifdef DEBUG
   NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:kSandboxServer]];
 #else

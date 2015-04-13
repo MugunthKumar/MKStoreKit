@@ -221,6 +221,20 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 - (NSInteger)subscriptionDurationForProduct:(NSString *)productId;
 
 /*!
+ *  @abstract Returns a JSON formated receipt
+ *
+ *  @discussion
+ *	The receipt can be sent to a subscription server for validation before returning subscription data.
+ *  It contains two items:
+ *  receipt-data -> the base64 encoded receipt data and the shared secret
+ *  password -> the shared secret for the App Store
+ *
+ *  @seealso
+ *  -expiryDateForProduct
+ */
+- (NSData *)receiptJSONData;
+
+/*!
  *  @abstract Checks the expiry date for the product identified by the given productId
  *
  *  @discussion
