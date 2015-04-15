@@ -385,8 +385,8 @@ static NSDictionary *errorDictionary;
         NSString *productIdentifier = receiptDictionary[@"product_id"];
         NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
         NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
-        if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]] && ![previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]]) {
-          if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+        if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]]) {
+          if ([previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]] || [expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
             self.purchaseRecord[productIdentifier] = expiresDateMs;
             purchaseRecordDirty = YES;
           }
@@ -457,7 +457,7 @@ static NSDictionary *errorDictionary;
         }
         
         [queue finishTransaction:transaction];
-        
+
         NSDictionary *availableConsumables = [MKStoreKit configs][@"Consumables"];
         NSArray *consumables = [availableConsumables allKeys];
         if ([consumables containsObject:transaction.payment.productIdentifier]) {
@@ -475,6 +475,7 @@ static NSDictionary *errorDictionary;
         }
         
         [self savePurchaseRecord];
+        [self startValidatingReceiptsAndUpdateLocalStore]; // to get subscription expiry date
         [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchasedNotification
                                                             object:transaction.payment.productIdentifier];
       }
