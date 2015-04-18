@@ -104,7 +104,7 @@ static NSDictionary *errorDictionary;
   errorDictionary = @{@(21000) : @"The App Store could not read the JSON object you provided.",
                       @(21002) : @"The data in the receipt-data property was malformed or missing.",
                       @(21003) : @"The receipt could not be authenticated.",
-                      @(21004) : @"The shared secret you provided does not match the shared secret on file for your accunt.",
+                      @(21004) : @"The shared secret you provided does not match the shared secret on file for your account.",
                       @(21005) : @"The receipt server is not currently available.",
                       @(21006) : @"This receipt is valid but the subscription has expired.",
                       @(21007) : @"This receipt is from the test environment.",
@@ -290,7 +290,7 @@ static NSDictionary *errorDictionary;
       NSLog(@"App receipt exists. Preparing to validate and update local stores.");
       [self startValidatingReceiptsAndUpdateLocalStore];
     } else {
-      NSLog(@"Receipt request completed but there is no receipt. The user may have refused to login, or the reciept is missing.");
+      NSLog(@"Receipt request completed but there is no receipt. The user may have refused to login, or the receipt is missing.");
       // Disable features of your app, but do not terminate the app
     }
   }
@@ -308,7 +308,7 @@ static NSDictionary *errorDictionary;
   NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
   if (!receiptData) {
     // Validation fails
-    NSLog(@"Receipt exists but there is no data available. Try refreshing the reciept payload and then checking again.");
+    NSLog(@"Receipt exists but there is no data available. Try refreshing the receipt payload and then checking again.");
     return nil;
   }
   

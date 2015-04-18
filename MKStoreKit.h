@@ -162,7 +162,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @abstract Refreshes the App Store receipt and prompts the user to authenticate.
  *
  *  @discussion
- *	This method can generate a reciept while debugging your application. In a production
+ *	This method can generate a receipt while debugging your application. In a production
  *  environment this should only be used in an appropriate context because it will present
  *  an App Store login alert to the user (without explanation).
  */
@@ -187,7 +187,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *
  *  @discussion
  *	This method checks against the local store maintained by MKStoreKit when the app was originally purchased
- *  This method can be used to determine if a user should recieve a free upgrade. For example, apps transitioning
+ *  This method can be used to determine if a user should receive a free upgrade. For example, apps transitioning
  *  from a paid system to a freemium system can determine if users are "grandfathered-in" and exempt from extra
  *  freemium purchases.
  *

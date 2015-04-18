@@ -1,6 +1,6 @@
 #MKStoreKit
 
-An in-App Purchase framework for iOS 7.0+. **MKStoreKit** makes in-App Purchasing super simple by remembering your purchases, validating reciepts, and tracking virtual currencies (consumable purchases). Additionally, it keeps track of auto-renewable subscriptions and their expirationd dates. It couldn't be easier!
+An in-App Purchase framework for iOS 7.0+. **MKStoreKit** makes in-App Purchasing super simple by remembering your purchases, validating receipts, and tracking virtual currencies (consumable purchases). Additionally, it keeps track of auto-renewable subscriptions and their expiration dates. It couldn't be easier!
 
 ## Compatibility
 See the table below for details on MKStoreKit's requirements and compatibility.
@@ -9,7 +9,7 @@ See the table below for details on MKStoreKit's requirements and compatibility.
 |:-------:|:------:|:-----------------------:|:-----------:|:------------:|:------------:|
 |   6.0   | Beta 1 | MKStoreKit Version 6.0  |  iOS 7.0 +  |    10.10 +   |      YES     |
 
-MKStoreKit 6 is a **complete revamp** of the project and is not compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple. See the *Backwards Compatibility* column to determine the earliest comaptible version with the current release.
+MKStoreKit 6 is a **complete revamp** of the project and is not compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple. See the *Backwards Compatibility* column to determine the earliest compatible version with the current release.
 
 *MKStoreKit 6 is still in early beta (see the Stage column). Use with caution*
 
@@ -57,7 +57,7 @@ Initialization is as simple as calling
 [[MKStoreKit sharedKit] startProductRequest]
 ```
 
-A sample initialziation code that you can add to your application:didFinishLaunchingWithOptions: is below
+A sample initialization code that you can add to your application:didFinishLaunchingWithOptions: is below
 
 ``` objective-c
 [[MKStoreKit sharedKit] startProductRequest];
