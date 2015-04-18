@@ -31,7 +31,7 @@
 //	1) linking my website from your app's website
 //	2) or crediting me inside the app's credits page
 //	3) or a tweet mentioning @mugunthkumar
-//	4) A paypal donation to mugunth.kumar@gmail.com
+//	4) A PayPal donation to mugunth.kumar@gmail.com
 //
 //  A note on redistribution
 //	if you are re-publishing after editing, please retain the above copyright notices
@@ -110,18 +110,19 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 /*!
  *  @abstract The singleton class that takes care of In App Purchasing
  *  @discussion
- *  MKStoreKit provides three basic functionalities, namely, managing In App Purchases,
+ *  MKStoreKit provides three basic functionality, namely, managing In App Purchases,
  *  remembering purchases for you and also provides a basic virtual currency manager
  */
 
 @interface MKStoreKit : NSObject
 
 /*!
- *  @abstract Property that stores the list of available In App purchaseable products
+ *  @abstract Property that stores the list of available In App purchasable products
  *
  *  @discussion
  *	This property is initialized after the call to startProductRequest completes
  *  If the startProductRequest fails, this property will be nil
+ *
  *  @seealso
  *  -startProductRequest
  */
@@ -162,7 +163,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @abstract Refreshes the App Store receipt and prompts the user to authenticate.
  *
  *  @discussion
- *	This method can generate a reciept while debugging your application. In a production
+ *	This method can generate a receipt while debugging your application. In a production
  *  environment this should only be used in an appropriate context because it will present
  *  an App Store login alert to the user (without explanation).
  */
@@ -187,7 +188,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *
  *  @discussion
  *	This method checks against the local store maintained by MKStoreKit when the app was originally purchased
- *  This method can be used to determine if a user should recieve a free upgrade. For example, apps transitioning
+ *  This method can be used to determine if a user should receive a free upgrade. For example, apps transitioning
  *  from a paid system to a freemium system can determine if users are "grandfathered-in" and exempt from extra
  *  freemium purchases.
  *
