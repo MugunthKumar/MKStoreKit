@@ -38,28 +38,29 @@
 
 #import "TargetConditionals.h"
 
-#if TARGET_OS_IPHONE
-    #import <Foundation/Foundation.h>
+@import Foundation;
 
+#if TARGET_OS_IPHONE
     #ifndef __IPHONE_7_0
         #error "MKStoreKit is only supported on iOS 7 or later."
+    #else
+    @import StoreKit;
     #endif
-
 #else
-    #import <Foundation/Foundation.h>
-    #import <Cocoa/Cocoa.h>
-
+    @import Cocoa;
     #ifndef __MAC_10_10
         #error "MKStoreKit is only supported on OS X 10.10 or later."
+    #else
+    @import StoreKit;
     #endif
-
 #endif
 
 #ifdef __OBJC__
-#if ! __has_feature(objc_arc)
-    #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+    #if ! __has_feature(objc_arc)
+        #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+    #endif
 #endif
-#endif
+
 /*!
  *  @abstract This notification is posted when MKStoreKit completes initialization sequence
  */
@@ -106,14 +107,12 @@ extern NSString *const kMKStoreKitReceiptValidationFailedNotification;
  */
 extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 
-
 /*!
  *  @abstract The singleton class that takes care of In App Purchasing
  *  @discussion
  *  MKStoreKit provides three basic functionality, namely, managing In App Purchases,
  *  remembering purchases for you and also provides a basic virtual currency manager
  */
-
 @interface MKStoreKit : NSObject
 
 /*!
@@ -271,5 +270,15 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  */
 - (void)setDefaultCredits:(NSNumber *)creditCount forConsumableIdentifier:(NSString *)consumableId;
 
+@end
+
+
+@interface MKStoreKit (TestsSupportExtractions)
+
++ (BOOL)canMakePayments;
++ (SKPaymentQueue *)paymentQueue;
++ (SKPayment *)paymentWithProduct:(SKProduct *)product;
++ (SKProductsRequest *)productsRequestWithProductIdentifiers:(NSSet *)productIdentifiers;
++ (SKReceiptRefreshRequest *)receiptRefreshRequestWithProperties:(NSDictionary *)properties;
 
 @end
