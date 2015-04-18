@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name             = "MKStoreKit"
   s.version          = "6.0.0"
-  s.summary          = "An in-App Purchase framework for iOS 7.0+."
+  s.summary          = "The "Go to" In App Purchases Framework for iOS 7+"
   s.description      = <<-DESC
                         An in-App Purchase framework for iOS 7.0+.
                         MKStoreKit makes in-App Purchasing super simple by remembering your purchases,
