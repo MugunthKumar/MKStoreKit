@@ -383,12 +383,15 @@ static NSDictionary *errorDictionary;
       __block BOOL purchaseRecordDirty = NO;
       [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop) {
         NSString *productIdentifier = receiptDictionary[@"product_id"];
-        NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
         NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
-        if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]]) {
-          if ([previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]] || [expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
-            self.purchaseRecord[productIdentifier] = expiresDateMs;
-            purchaseRecordDirty = YES;
+        NSNumber *cenceledDateMs = receiptDictionary[@"cancellation_date_ms"];
+        if (!cenceledDateMs || [cenceledDateMs isKindOfClass:[NSNull class]]) { // transaction not cancelled
+          NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
+          if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]]) { // check if expiry date is later than the stored date
+            if ([previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]] || [expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+              self.purchaseRecord[productIdentifier] = expiresDateMs;
+              purchaseRecordDirty = YES;
+            }
           }
         }
       }];
