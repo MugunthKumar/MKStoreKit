@@ -1,0 +1,6 @@
+source 'https://github.com/CocoaPods/Specs.git'
+link_with :MKStoreKitExample, :MKStoreKitExampleTests
+platform :ios, '7.0'
+inhibit_all_warnings!
+
+pod 'MKStoreKit', :path => '../MKStoreKit.podspec'

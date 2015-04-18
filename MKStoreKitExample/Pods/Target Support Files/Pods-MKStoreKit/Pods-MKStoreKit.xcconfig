@@ -1,0 +1,1 @@
+PODS_MKSTOREKIT_OTHER_LDFLAGS = -framework "StoreKit"
