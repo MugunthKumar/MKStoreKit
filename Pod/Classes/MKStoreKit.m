@@ -31,14 +31,14 @@
 //	1) linking my website from your app's website
 //	2) or crediting me inside the app's credits page
 //	3) or a tweet mentioning @mugunthkumar
-//	4) A paypal donation to mugunth.kumar@gmail.com
+//	4) A PayPal donation to mugunth.kumar@gmail.com
 //
 //  A note on redistribution
 //	if you are re-publishing after editing, please retain the above copyright notices
 
 #import "MKStoreKit.h"
-
 @import StoreKit;
+
 NSString *const kMKStoreKitProductsAvailableNotification = @"com.mugunthkumar.mkstorekit.productsavailable";
 NSString *const kMKStoreKitProductPurchasedNotification = @"com.mugunthkumar.mkstorekit.productspurchased";
 NSString *const kMKStoreKitProductPurchaseFailedNotification = @"com.mugunthkumar.mkstorekit.productspurchasefailed";
@@ -55,8 +55,10 @@ NSString *const kOriginalAppVersionKey = @"SKOrigBundleRef"; // Obfuscating reco
 
 static NSDictionary *errorDictionary;
 
-@interface MKStoreKit (/*Private Methods*/) <SKProductsRequestDelegate, SKPaymentTransactionObserver>
+@interface MKStoreKit () <SKProductsRequestDelegate, SKPaymentTransactionObserver>
+
 @property NSMutableDictionary *purchaseRecord;
+
 @end
 
 @implementation MKStoreKit
@@ -117,7 +119,6 @@ static NSDictionary *errorDictionary;
 + (NSDictionary *)configs {
   return [NSDictionary dictionaryWithContentsOfFile:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"MKStoreKitConfigs.plist"]];
 }
-
 
 #pragma mark -
 #pragma mark Store File Management
@@ -304,12 +305,12 @@ static NSDictionary *errorDictionary;
     return;
   }
   
-  NSError *error;
-  NSMutableDictionary *requestContents = [NSMutableDictionary dictionaryWithObject:
-                                          [receiptData base64EncodedStringWithOptions:0] forKey:@"receipt-data"];
+  NSString *parsedReceiptData = [receiptData base64EncodedStringWithOptions:0];
+  NSMutableDictionary *requestContents = [@{@"receipt-data" : parsedReceiptData} mutableCopy];
   NSString *sharedSecret = [MKStoreKit configs][@"SharedSecret"];
   if (sharedSecret) requestContents[@"password"] = sharedSecret;
-  
+
+  NSError *error = nil;
   NSData *requestData = [NSJSONSerialization dataWithJSONObject:requestContents options:0 error:&error];
   
 #ifdef DEBUG
@@ -322,19 +323,18 @@ static NSDictionary *errorDictionary;
   [storeRequest setHTTPBody:requestData];
   
   NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-  
   [[session dataTaskWithRequest:storeRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
     if (!error) {
       NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
       NSInteger status = [jsonResponse[@"status"] integerValue];
       NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
-      [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
+      self.purchaseRecord[kOriginalAppVersionKey] = originalAppVersion;
       [self savePurchaseRecord];
       
       if (status != 0) {
-        NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:status
-                                         userInfo:@{NSLocalizedDescriptionKey : errorDictionary[@(status)]}];
-        completionHandler(nil, error);
+        NSError *statusError = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:status
+                                               userInfo:@{NSLocalizedDescriptionKey : errorDictionary[@(status)]}];
+        completionHandler(nil, statusError);
       } else {
         NSMutableArray *receipts = [jsonResponse[@"latest_receipt_info"] mutableCopy];
         NSArray *inAppReceipts = jsonResponse[@"receipt"][@"in_app"];
@@ -348,12 +348,8 @@ static NSDictionary *errorDictionary;
 }
 
 - (BOOL)purchasedAppBeforeVersion:(NSString *)requiredVersion {
-  NSString *actualVersion = [self.purchaseRecord objectForKey:kOriginalAppVersionKey];
-  
-  if ([requiredVersion compare:actualVersion options:NSNumericSearch] == NSOrderedDescending) {
-    // actualVersion is lower than the requiredVersion
-    return YES;
-  } else return NO;
+  NSString *actualVersion = self.purchaseRecord[kOriginalAppVersionKey];
+  return [requiredVersion compare:actualVersion options:NSNumericSearch] == NSOrderedDescending;
 }
 
 - (void)startValidatingReceiptsAndUpdateLocalStore {
@@ -419,7 +415,6 @@ static NSDictionary *errorDictionary;
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
   for (SKPaymentTransaction *transaction in transactions) {
     switch (transaction.transactionState) {
-        
       case SKPaymentTransactionStatePurchasing:
         break;
         
