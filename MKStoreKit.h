@@ -102,10 +102,14 @@ extern NSString *const kMKStoreKitRestoringPurchasesFailedNotification;
 extern NSString *const kMKStoreKitReceiptValidationFailedNotification;
 
 /*!
- *  @abstract This notification is posted when MKStoreKit detects expiration of a auto-renewing subscription
+ *  @abstract This notification is posted when MKStoreKit detects expiration of an auto-renewing subscription
  */
 extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 
+/*!
+ *  @abstract This notification is posted when MKStoreKit updates the expiration date of an auto-renewing subscription
+ */
+extern NSString *const kMKStoreKitSubscriptionDateUpdatedNotification;
 
 /*!
  *  @abstract The singleton class that takes care of In App Purchasing

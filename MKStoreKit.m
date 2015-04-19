@@ -47,6 +47,7 @@ NSString *const kMKStoreKitRestoredPurchasesNotification = @"com.mugunthkumar.mk
 NSString *const kMKStoreKitRestoringPurchasesFailedNotification = @"com.mugunthkumar.mkstorekit.failedrestoringpurchases";
 NSString *const kMKStoreKitReceiptValidationFailedNotification = @"com.mugunthkumar.mkstorekit.failedvalidatingreceipts";
 NSString *const kMKStoreKitSubscriptionExpiredNotification = @"com.mugunthkumar.mkstorekit.subscriptionexpired";
+NSString *const kMKStoreKitSubscriptionDateUpdatedNotification = @"com.mugunthkumar.mkstorekit.subscriptiondateupdated";
 
 NSString *const kSandboxServer = @"https://sandbox.itunes.apple.com/verifyReceipt";
 NSString *const kLiveServer = @"https://buy.itunes.apple.com/verifyReceipt";
@@ -396,8 +397,11 @@ static NSDictionary *errorDictionary;
         }
       }];
       
-      if (purchaseRecordDirty) [self savePurchaseRecord];
-      
+        if (purchaseRecordDirty) {
+            [self savePurchaseRecord];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionDateUpdatedNotification object:nil];
+        }
+
       [self.purchaseRecord enumerateKeysAndObjectsUsingBlock:^(NSString *productIdentifier, NSNumber *expiresDateMs, BOOL *stop) {
         if (![expiresDateMs isKindOfClass: [NSNull class]]) {
           if ([[NSDate date] timeIntervalSince1970] > [expiresDateMs doubleValue]) {
