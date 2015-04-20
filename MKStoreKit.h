@@ -102,10 +102,14 @@ extern NSString *const kMKStoreKitRestoringPurchasesFailedNotification;
 extern NSString *const kMKStoreKitReceiptValidationFailedNotification;
 
 /*!
- *  @abstract This notification is posted when MKStoreKit detects expiration of a auto-renewing subscription
+ *  @abstract This notification is posted when MKStoreKit detects expiration of an auto-renewing subscription
  */
 extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 
+/*!
+ *  @abstract This notification is posted when MKStoreKit updates the expiration date of an auto-renewing subscription
+ */
+extern NSString *const kMKStoreKitSubscriptionDateUpdatedNotification;
 
 /*!
  *  @abstract The singleton class that takes care of In App Purchasing
@@ -162,7 +166,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  @abstract Refreshes the App Store receipt and prompts the user to authenticate.
  *
  *  @discussion
- *	This method can generate a reciept while debugging your application. In a production
+ *	This method can generate a receipt while debugging your application. In a production
  *  environment this should only be used in an appropriate context because it will present
  *  an App Store login alert to the user (without explanation).
  */
@@ -187,7 +191,7 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *
  *  @discussion
  *	This method checks against the local store maintained by MKStoreKit when the app was originally purchased
- *  This method can be used to determine if a user should recieve a free upgrade. For example, apps transitioning
+ *  This method can be used to determine if a user should receive a free upgrade. For example, apps transitioning
  *  from a paid system to a freemium system can determine if users are "grandfathered-in" and exempt from extra
  *  freemium purchases.
  *
@@ -208,6 +212,31 @@ extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
  *  -expiryDateForProduct
  */
 - (BOOL)isProductPurchased:(NSString *)productId;
+
+/*!
+ *  @abstract Returns the duration of an auto-renewing subscription product
+ *
+ *  @discussion
+ *	This method reads the duration from MKStoreKitConfigs.plist
+ *
+ *  @seealso
+ *  -expiryDateForProduct
+ */
+- (NSInteger)subscriptionDurationForProduct:(NSString *)productId;
+
+/*!
+ *  @abstract Returns a JSON formated receipt
+ *
+ *  @discussion
+ *	The receipt can be sent to a subscription server for validation before returning subscription data.
+ *  It contains two items:
+ *  receipt-data -> the base64 encoded receipt data and the shared secret
+ *  password -> the shared secret for the App Store
+ *
+ *  @seealso
+ *  -expiryDateForProduct
+ */
+- (NSData *)receiptJSONData;
 
 /*!
  *  @abstract Checks the expiry date for the product identified by the given productId

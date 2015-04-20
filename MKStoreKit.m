@@ -47,6 +47,7 @@ NSString *const kMKStoreKitRestoredPurchasesNotification = @"com.mugunthkumar.mk
 NSString *const kMKStoreKitRestoringPurchasesFailedNotification = @"com.mugunthkumar.mkstorekit.failedrestoringpurchases";
 NSString *const kMKStoreKitReceiptValidationFailedNotification = @"com.mugunthkumar.mkstorekit.failedvalidatingreceipts";
 NSString *const kMKStoreKitSubscriptionExpiredNotification = @"com.mugunthkumar.mkstorekit.subscriptionexpired";
+NSString *const kMKStoreKitSubscriptionDateUpdatedNotification = @"com.mugunthkumar.mkstorekit.subscriptiondateupdated";
 
 NSString *const kSandboxServer = @"https://sandbox.itunes.apple.com/verifyReceipt";
 NSString *const kLiveServer = @"https://buy.itunes.apple.com/verifyReceipt";
@@ -104,7 +105,7 @@ static NSDictionary *errorDictionary;
   errorDictionary = @{@(21000) : @"The App Store could not read the JSON object you provided.",
                       @(21002) : @"The data in the receipt-data property was malformed or missing.",
                       @(21003) : @"The receipt could not be authenticated.",
-                      @(21004) : @"The shared secret you provided does not match the shared secret on file for your accunt.",
+                      @(21004) : @"The shared secret you provided does not match the shared secret on file for your account.",
                       @(21005) : @"The receipt server is not currently available.",
                       @(21006) : @"This receipt is valid but the subscription has expired.",
                       @(21007) : @"This receipt is from the test environment.",
@@ -157,9 +158,17 @@ static NSDictionary *errorDictionary;
   return [self.purchaseRecord.allKeys containsObject:productId];
 }
 
+- (NSInteger)subscriptionDurationForProduct:(NSString *)productId {
+    NSDictionary *subscriptions = [MKStoreKit configs][@"Subscriptions"];
+    NSNumber *duration = subscriptions[productId];
+    if (nil == duration) return -1;
+    return [duration integerValue];
+}
+
 -(NSDate*) expiryDateForProduct:(NSString*) productId {
   
   NSNumber *expiresDateMs = self.purchaseRecord[productId];
+  if (nil == expiresDateMs || [[NSNull null] isEqual:expiresDateMs]) return nil;
   return [NSDate dateWithTimeIntervalSince1970:[expiresDateMs doubleValue] / 1000.0f];
 }
 
@@ -189,10 +198,12 @@ static NSDictionary *errorDictionary;
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[MKStoreKit configs][@"Consumables"] allKeys];
   NSArray *others = [MKStoreKit configs][@"Others"];
-  
+  NSArray *subscriptions = [[MKStoreKit configs][@"Subscriptions"] allKeys];
+
   [productsArray addObjectsFromArray:consumables];
   [productsArray addObjectsFromArray:others];
-  
+  [productsArray addObjectsFromArray:subscriptions];
+
   SKProductsRequest *productsRequest = [[SKProductsRequest alloc]
                                         initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
   productsRequest.delegate = self;
@@ -280,28 +291,26 @@ static NSDictionary *errorDictionary;
       NSLog(@"App receipt exists. Preparing to validate and update local stores.");
       [self startValidatingReceiptsAndUpdateLocalStore];
     } else {
-      NSLog(@"Receipt request completed but there is no receipt. The user may have refused to login, or the reciept is missing.");
+      NSLog(@"Receipt request completed but there is no receipt. The user may have refused to login, or the receipt is missing.");
       // Disable features of your app, but do not terminate the app
     }
   }
 }
 
-- (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler {
+- (NSData *)receiptJSONData {
   NSURL *receiptURL = [[NSBundle mainBundle] appStoreReceiptURL];
   NSError *receiptError;
   BOOL isPresent = [receiptURL checkResourceIsReachableAndReturnError:&receiptError];
   if (!isPresent) {
-    // No receipt - In App Purchase was never initiated
-    completionHandler(nil, nil);
-    return;
+    NSLog(@"No receipt in NSBundle.appStoreReceiptURL - In App Purchase was never initiated: %@", receiptError.localizedDescription);
+    return nil;
   }
-  
+
   NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
   if (!receiptData) {
     // Validation fails
-    NSLog(@"Receipt exists but there is no data available. Try refreshing the reciept payload and then checking again.");
-    completionHandler(nil, nil);
-    return;
+    NSLog(@"Receipt exists but there is no data available. Try refreshing the receipt payload and then checking again.");
+    return nil;
   }
   
   NSError *error;
@@ -309,9 +318,19 @@ static NSDictionary *errorDictionary;
                                           [receiptData base64EncodedStringWithOptions:0] forKey:@"receipt-data"];
   NSString *sharedSecret = [MKStoreKit configs][@"SharedSecret"];
   if (sharedSecret) requestContents[@"password"] = sharedSecret;
-  
+
   NSData *requestData = [NSJSONSerialization dataWithJSONObject:requestContents options:0 error:&error];
-  
+
+  return requestData;
+}
+
+- (void)startValidatingAppStoreReceiptWithCompletionHandler:(void (^)(NSArray *receipts, NSError *error)) completionHandler {
+    NSData *requestData = [self receiptJSONData];
+    if (nil == requestData) {
+        completionHandler(nil, nil);
+        return;
+    }
+
 #ifdef DEBUG
   NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:kSandboxServer]];
 #else
@@ -365,18 +384,24 @@ static NSDictionary *errorDictionary;
       __block BOOL purchaseRecordDirty = NO;
       [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop) {
         NSString *productIdentifier = receiptDictionary[@"product_id"];
-        NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
         NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
-        if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]] && ![previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]]) {
-          if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
-            self.purchaseRecord[productIdentifier] = expiresDateMs;
-            purchaseRecordDirty = YES;
+        NSNumber *cenceledDateMs = receiptDictionary[@"cancellation_date_ms"];
+        if (!cenceledDateMs || [cenceledDateMs isKindOfClass:[NSNull class]]) { // transaction not cancelled
+          NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
+          if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]]) { // check if expiry date is later than the stored date
+            if ([previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]] || [expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+              self.purchaseRecord[productIdentifier] = expiresDateMs;
+              purchaseRecordDirty = YES;
+            }
           }
         }
       }];
       
-      if (purchaseRecordDirty) [self savePurchaseRecord];
-      
+        if (purchaseRecordDirty) {
+            [self savePurchaseRecord];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionDateUpdatedNotification object:nil];
+        }
+
       [self.purchaseRecord enumerateKeysAndObjectsUsingBlock:^(NSString *productIdentifier, NSNumber *expiresDateMs, BOOL *stop) {
         if (![expiresDateMs isKindOfClass: [NSNull class]]) {
           if ([[NSDate date] timeIntervalSince1970] > [expiresDateMs doubleValue]) {
@@ -439,7 +464,7 @@ static NSDictionary *errorDictionary;
         }
         
         [queue finishTransaction:transaction];
-        
+
         NSDictionary *availableConsumables = [MKStoreKit configs][@"Consumables"];
         NSArray *consumables = [availableConsumables allKeys];
         if ([consumables containsObject:transaction.payment.productIdentifier]) {
@@ -457,6 +482,7 @@ static NSDictionary *errorDictionary;
         }
         
         [self savePurchaseRecord];
+        [self startValidatingReceiptsAndUpdateLocalStore]; // to get subscription expiry date
         [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchasedNotification
                                                             object:transaction.payment.productIdentifier];
       }
