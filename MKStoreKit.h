@@ -106,6 +106,12 @@ extern NSString *const kMKStoreKitReceiptValidationFailedNotification;
  */
 extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
 
+extern NSString *const kMKStoreKitSubscriptionTransactionCompletedNotification;
+
+/*!
+ *  @abstract This notification is posted when MKStoreKit completed subscribing to AppStore.
+ */
+
 
 /*!
  *  @abstract The singleton class that takes care of In App Purchasing

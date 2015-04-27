@@ -47,6 +47,8 @@ NSString *const kMKStoreKitRestoredPurchasesNotification = @"com.mugunthkumar.mk
 NSString *const kMKStoreKitRestoringPurchasesFailedNotification = @"com.mugunthkumar.mkstorekit.failedrestoringpurchases";
 NSString *const kMKStoreKitReceiptValidationFailedNotification = @"com.mugunthkumar.mkstorekit.failedvalidatingreceipts";
 NSString *const kMKStoreKitSubscriptionExpiredNotification = @"com.mugunthkumar.mkstorekit.subscriptionexpired";
+NSString *const kMKStoreKitSubscriptionTransactionCompletedNotification =
+@"com.mugunthkumar.mkstorekit.subscriptionCompleted";
 
 NSString *const kSandboxServer = @"https://sandbox.itunes.apple.com/verifyReceipt";
 NSString *const kLiveServer = @"https://buy.itunes.apple.com/verifyReceipt";
@@ -222,6 +224,7 @@ static NSDictionary *errorDictionary;
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
   [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitRestoringPurchasesFailedNotification object:error];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionTransactionCompletedNotification object:error];
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
@@ -418,6 +421,8 @@ static NSDictionary *errorDictionary;
 
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
   for (SKPaymentTransaction *transaction in transactions) {
+      transaction.transactionState != SKPaymentTransactionStatePurchasing ? [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionTransactionCompletedNotification object:transaction] : nil;
+
     switch (transaction.transactionState) {
         
       case SKPaymentTransactionStatePurchasing:
