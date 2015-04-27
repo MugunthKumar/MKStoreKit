@@ -224,7 +224,7 @@ static NSDictionary *errorDictionary;
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
   [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitRestoringPurchasesFailedNotification object:error];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionTransactionMadeNotification object:error];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitSubscriptionTransactionCompletedNotification object:error];
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
