@@ -175,6 +175,14 @@ static NSDictionary *errorDictionary;
   return currentConsumableCount;
 }
 
+- (NSNumber *)addCreditsWithoutPurchase:(NSNumber *)creditCountToAdd identifiedByConsumableIdentifier:(NSString *)consumableId {
+    NSNumber *currentConsumableCount = self.purchaseRecord[consumableId];
+    currentConsumableCount = @([currentConsumableCount doubleValue] + [creditCountToAdd doubleValue]);
+    self.purchaseRecord[consumableId] = currentConsumableCount;
+    [self savePurchaseRecord];
+    return currentConsumableCount;
+}
+
 - (void)setDefaultCredits:(NSNumber *)creditCount forConsumableIdentifier:(NSString *)consumableId {
   if (self.purchaseRecord[consumableId] == nil) {
     self.purchaseRecord[consumableId] = creditCount;
