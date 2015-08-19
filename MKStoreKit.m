@@ -38,7 +38,7 @@
 
 #import "MKStoreKit.h"
 
-@import StoreKit;
+#import <StoreKit/StoreKit.h>
 NSString *const kMKStoreKitProductsAvailableNotification = @"com.mugunthkumar.mkstorekit.productsavailable";
 NSString *const kMKStoreKitProductPurchasedNotification = @"com.mugunthkumar.mkstorekit.productspurchased";
 NSString *const kMKStoreKitProductPurchaseFailedNotification = @"com.mugunthkumar.mkstorekit.productspurchasefailed";
@@ -233,9 +233,9 @@ static NSDictionary *errorDictionary;
 
 - (void)initiatePaymentRequestForProductWithIdentifier:(NSString *)productId {
   if (!self.availableProducts) {
-    // TODO: FIX ME
     // Initializer might be running or internet might not be available
-    NSLog(@"No products are available. Did you initialize MKStoreKit by calling [[MKStoreKit sharedKit] startProductRequest]?");
+    UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Error contacting itunes store" message:@"Are you connected to the internet?"  delegate:nil cancelButtonTitle:@"Close" otherButtonTitles:nil, nil];
+    [a show];
   }
   
   if (![SKPaymentQueue canMakePayments]) {
@@ -327,9 +327,19 @@ static NSDictionary *errorDictionary;
     if (!error) {
       NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
       NSInteger status = [jsonResponse[@"status"] integerValue];
-      NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
-      [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
-      [self savePurchaseRecord];
+      if (jsonResponse[@"receipt"] != [NSNull null]) {
+        NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
+        if (nil != originalAppVersion) {
+          [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
+          [self savePurchaseRecord];
+        }
+        else {
+          completionHandler(nil, nil);
+        }
+      }
+      else {
+        completionHandler(nil, nil);
+      }
       
       if (status != 0) {
         NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:status
@@ -337,9 +347,14 @@ static NSDictionary *errorDictionary;
         completionHandler(nil, error);
       } else {
         NSMutableArray *receipts = [jsonResponse[@"latest_receipt_info"] mutableCopy];
-        NSArray *inAppReceipts = jsonResponse[@"receipt"][@"in_app"];
-        [receipts addObjectsFromArray:inAppReceipts];
-        completionHandler(receipts, nil);
+        if (jsonResponse[@"receipt"] != [NSNull null]) {
+          NSArray *inAppReceipts = jsonResponse[@"receipt"][@"in_app"];
+          [receipts addObjectsFromArray:inAppReceipts];
+          completionHandler(receipts, nil);
+        }
+        else {
+          completionHandler(nil, nil);
+        }
       }
     } else {
       completionHandler(nil, error);
