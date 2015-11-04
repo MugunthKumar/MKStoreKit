@@ -1,11 +1,11 @@
 #MKStoreKit
 
-This is version 6.0 beta 1 of MKStoreKit. iOS 7+ only. 
+This is version 6.1 of MKStoreKit. iOS 8+ only. 
 MKStoreKit 6 is a **complete revamp** is not API compatible with previous versions of MKStoreKit. Refactoring should however be fairly simple.
 
 *The code base is still in early beta. Use with caution*
 
-The source code contains just three files, MKStoreKit.h/m and MKStoreKitConfigs.plist
+The library contains just three files, MKStoreKit.h/m and MKStoreKitConfigs.plist
 The MKStoreKit is a singleton class that takes care of *everything*. Just drag these four files into the project. You then have to initialize it by calling [[MKStoreKit sharedKit] startProductRequest] in your application:didFinishLaunchingWithOptions. From then on, it does the magic. The MKStoreKit purchases, remembers and even handles remote validation of auto-renewable subscriptions.
 
 ## Features
@@ -13,10 +13,11 @@ The MKStoreKit is a singleton class that takes care of *everything*. Just drag t
 * Built-in support for remembering your purchases
 * Built-in receipt validation (remote)
 * Built-in virtual currency manager
+* Built-in Hosted Content Download Manager
 
 ## Sample Code 
 
-It's close to impossible to maintain a working sample code for MKStoreKit as iTunes connect deletes/deactivates un-submitted apps after 90 days. I'll instead be updating code snippets here.
+The Sample Code shows how to use MKStoreKit.
 
 ###Config File Format
 MKStoreKit uses a config file, MKStoreKitConfigs.plist for managing your product identifiers.
@@ -29,12 +30,19 @@ SharedSecret is the key where you provide the shared secret generated on your iT
 ###Initialization
 
 Initialization is as simple as calling
+In Objective-C
 
 ``` objective-c
 [[MKStoreKit sharedKit] startProductRequest]
 ```
 
-A sample initialziation code that you can add to your application:didFinishLaunchingWithOptions: is below
+In Swift
+
+``` swift
+    MKStoreKit.sharedKit().startProductRequest()
+```
+A sample initializiation code that you can add to your application:didFinishLaunchingWithOptions: is below
+In Objective-C
 
 ``` objective-c
   [[MKStoreKit sharedKit] startProductRequest];
@@ -73,6 +81,22 @@ A sample initialziation code that you can add to your application:didFinishLaunc
                                                 }];
 ```
 
+In Swift
+
+``` swift
+    MKStoreKit.sharedKit().startProductRequest()
+    NSNotificationCenter.defaultCenter().addObserverForName(kMKStoreKitProductsAvailableNotification,
+      object: nil, queue: NSOperationQueue.mainQueue()) { (note) -> Void in
+        print(MKStoreKit.sharedKit().availableProducts)
+    }
+
+    NSNotificationCenter.defaultCenter().addObserverForName(kMKStoreKitProductPurchasedNotification,
+      object: nil, queue: NSOperationQueue.mainQueue()) { (note) -> Void in
+        print ("Purchased product: \(note.object)")
+    }
+
+```
+
 ###Checking Product Status
 You can check if a product was previously purchased using -isProductPurchased as shown below.
 ``` objective-c
@@ -88,7 +112,7 @@ if([MKStoreManager expiryDateForProduct:productIdentifier]) {
 }
 ```
 
-Warning: This method will return []NSNull null] for products that are not auto-renewing subscriptions.
+Warning: This method will return ```[NSNull null]``` for products that are not auto-renewing subscriptions.
 
 
 ###Making a Purchase
@@ -120,9 +144,7 @@ It can't get simpler than this!
 
 * Dynamically adding products to MKStoreKit from a remote resource
 * Keychain support for products
-* Support for hosted content
 * Local receipt verification using asn1c
-* Support for iOS 8's "Ask to buy" (SKPaymentTransactionStateDeferred)
 
 ## Untested Features
 
