@@ -39,25 +39,25 @@
 #import "TargetConditionals.h"
 
 #if TARGET_OS_IPHONE
-    #import <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
 
-    #ifndef __IPHONE_7_0
-        #error "MKStoreKit is only supported on iOS 7 or later."
-    #endif
+#ifndef __IPHONE_8_0
+#error "MKStoreKit is only supported on iOS 8 or later."
+#endif
 
 #else
-    #import <Foundation/Foundation.h>
-    #import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
-    #ifndef __MAC_10_10
-        #error "MKStoreKit is only supported on OS X 10.10 or later."
-    #endif
+#ifndef __MAC_10_10
+#error "MKStoreKit is only supported on OS X 10.10 or later."
+#endif
 
 #endif
 
 #ifdef __OBJC__
 #if ! __has_feature(objc_arc)
-    #error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
+#error MKStoreKit is ARC only. Either turn on ARC for the project or use -fobjc-arc flag
 #endif
 #endif
 /*!
@@ -105,6 +105,16 @@ extern NSString *const kMKStoreKitReceiptValidationFailedNotification;
  *  @abstract This notification is posted when MKStoreKit detects expiration of a auto-renewing subscription
  */
 extern NSString *const kMKStoreKitSubscriptionExpiredNotification;
+
+/*!
+ *  @abstract This notification is posted when MKStoreKit downloads a hosted content
+ */
+extern NSString *const kMKStoreKitDownloadProgressNotification;
+
+/*!
+ *  @abstract This notification is posted when MKStoreKit completes downloading a hosted content
+ */
+extern NSString *const kMKStoreKitDownloadCompletedNotification;
 
 
 /*!

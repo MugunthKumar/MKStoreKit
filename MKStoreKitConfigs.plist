@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Consumables</key>
+	<dict>
+		<key>com.steinlogic.iapdemo.consumable</key>
+		<dict>
+			<key>ConsumableCount</key>
+			<integer>500</integer>
+			<key>ConsumableId</key>
+			<string>MyVirtualCurrencyWallet</string>
+		</dict>
+	</dict>
+	<key>Others</key>
+	<array>
+		<string>com.steinlogic.iapdemo.quarterly</string>
+		<string>com.steinlogic.iapdemo.nonconsumablenocontent</string>
+		<string>com.steinlogic.iapdemo.nonconsumablewithcontent</string>
+	</array>
+	<key>SharedSecret</key>
+	<string>749a1ca3750a421fa92cf8e139a6f539</string>
+</dict>
+</plist>

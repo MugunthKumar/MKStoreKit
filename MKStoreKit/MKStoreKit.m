@@ -47,6 +47,9 @@ NSString *const kMKStoreKitRestoredPurchasesNotification = @"com.mugunthkumar.mk
 NSString *const kMKStoreKitRestoringPurchasesFailedNotification = @"com.mugunthkumar.mkstorekit.failedrestoringpurchases";
 NSString *const kMKStoreKitReceiptValidationFailedNotification = @"com.mugunthkumar.mkstorekit.failedvalidatingreceipts";
 NSString *const kMKStoreKitSubscriptionExpiredNotification = @"com.mugunthkumar.mkstorekit.subscriptionexpired";
+NSString *const kMKStoreKitDownloadProgressNotification = @"com.mugunthkumar.mkstorekit.downloadprogress";
+NSString *const kMKStoreKitDownloadCompletedNotification = @"com.mugunthkumar.mkstorekit.downloadcompleted";
+
 
 NSString *const kSandboxServer = @"https://sandbox.itunes.apple.com/verifyReceipt";
 NSString *const kLiveServer = @"https://buy.itunes.apple.com/verifyReceipt";
@@ -81,11 +84,11 @@ static NSDictionary *errorDictionary;
                                                selector:@selector(savePurchaseRecord)
                                                    name:NSApplicationDidResignActiveNotification object:nil];
 #endif
-      
+
       [_sharedKit startValidatingReceiptsAndUpdateLocalStore];
     });
   }
-  
+
   return _sharedKit;
 }
 
@@ -132,6 +135,7 @@ static NSDictionary *errorDictionary;
   if (self.purchaseRecord == nil) {
     self.purchaseRecord = [NSMutableDictionary dictionary];
   }
+  NSLog(@"%@", self.purchaseRecord);
 }
 
 - (void)savePurchaseRecord {
@@ -142,11 +146,11 @@ static NSDictionary *errorDictionary;
 #elif TARGET_OS_MAC
   BOOL success = [data writeToFile:[self purchaseRecordFilePath] options:NSDataWritingAtomic error:&error];
 #endif
-  
+
   if (!success) {
     NSLog(@"Failed to remember data record");
   }
-  
+
   NSLog(@"%@", self.purchaseRecord);
 }
 
@@ -158,7 +162,7 @@ static NSDictionary *errorDictionary;
 }
 
 -(NSDate*) expiryDateForProduct:(NSString*) productId {
-  
+
   NSNumber *expiresDateMs = self.purchaseRecord[productId];
   return [NSDate dateWithTimeIntervalSince1970:[expiresDateMs doubleValue] / 1000.0f];
 }
@@ -189,10 +193,10 @@ static NSDictionary *errorDictionary;
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[MKStoreKit configs][@"Consumables"] allKeys];
   NSArray *others = [MKStoreKit configs][@"Others"];
-  
+
   [productsArray addObjectsFromArray:consumables];
   [productsArray addObjectsFromArray:others];
-  
+
   SKProductsRequest *productsRequest = [[SKProductsRequest alloc]
                                         initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
   productsRequest.delegate = self;
@@ -203,7 +207,7 @@ static NSDictionary *errorDictionary;
   if (response.invalidProductIdentifiers.count > 0) {
     NSLog(@"Invalid Product IDs: %@", response.invalidProductIdentifiers);
   }
-  
+
   self.availableProducts = response.products;
   [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductsAvailableNotification
                                                       object:self.availableProducts];
@@ -237,14 +241,14 @@ static NSDictionary *errorDictionary;
     // Initializer might be running or internet might not be available
     NSLog(@"No products are available. Did you initialize MKStoreKit by calling [[MKStoreKit sharedKit] startProductRequest]?");
   }
-  
+
   if (![SKPaymentQueue canMakePayments]) {
 #if TARGET_OS_IPHONE
-    [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"In App Purchasing Disabled", @"")
-                                message:NSLocalizedString(@"Check your parental control settings and try again later", @"")
-                               delegate:self
-                      cancelButtonTitle:NSLocalizedString(@"Okay", @"")
-                      otherButtonTitles:nil] show];
+    UIAlertController *controller = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"In App Purchasing Disabled", @"")
+                                                                        message:NSLocalizedString(@"Check your parental control settings and try again later", @"") preferredStyle:UIAlertControllerStyleAlert];
+
+    [[UIApplication sharedApplication].keyWindow.rootViewController
+     presentViewController:controller animated:YES completion:nil];
 #elif TARGET_OS_MAC
     NSAlert *alert = [[NSAlert alloc] init];
     alert.messageText = NSLocalizedString(@"In App Purchasing Disabled", @"");
@@ -253,7 +257,7 @@ static NSDictionary *errorDictionary;
 #endif
     return;
   }
-  
+
   [self.availableProducts enumerateObjectsUsingBlock:^(SKProduct *thisProduct, NSUInteger idx, BOOL *stop) {
     if ([thisProduct.productIdentifier isEqualToString:productId]) {
       *stop = YES;
@@ -295,7 +299,7 @@ static NSDictionary *errorDictionary;
     completionHandler(nil, nil);
     return;
   }
-  
+
   NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
   if (!receiptData) {
     // Validation fails
@@ -303,26 +307,26 @@ static NSDictionary *errorDictionary;
     completionHandler(nil, nil);
     return;
   }
-  
+
   NSError *error;
   NSMutableDictionary *requestContents = [NSMutableDictionary dictionaryWithObject:
                                           [receiptData base64EncodedStringWithOptions:0] forKey:@"receipt-data"];
   NSString *sharedSecret = [MKStoreKit configs][@"SharedSecret"];
   if (sharedSecret) requestContents[@"password"] = sharedSecret;
-  
+
   NSData *requestData = [NSJSONSerialization dataWithJSONObject:requestContents options:0 error:&error];
-  
+
 #ifdef DEBUG
   NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:kSandboxServer]];
 #else
   NSMutableURLRequest *storeRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:kLiveServer]];
 #endif
-  
+
   [storeRequest setHTTPMethod:@"POST"];
   [storeRequest setHTTPBody:requestData];
-  
+
   NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-  
+
   [[session dataTaskWithRequest:storeRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
     if (!error) {
       NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
@@ -330,7 +334,7 @@ static NSDictionary *errorDictionary;
       NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
       [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
       [self savePurchaseRecord];
-      
+
       if (status != 0) {
         NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:status
                                          userInfo:@{NSLocalizedDescriptionKey : errorDictionary[@(status)]}];
@@ -349,7 +353,7 @@ static NSDictionary *errorDictionary;
 
 - (BOOL)purchasedAppBeforeVersion:(NSString *)requiredVersion {
   NSString *actualVersion = [self.purchaseRecord objectForKey:kOriginalAppVersionKey];
-  
+
   if ([requiredVersion compare:actualVersion options:NSNumericSearch] == NSOrderedDescending) {
     // actualVersion is lower than the requiredVersion
     return YES;
@@ -366,17 +370,25 @@ static NSDictionary *errorDictionary;
       [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop) {
         NSString *productIdentifier = receiptDictionary[@"product_id"];
         NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
-        NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
-        if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]] && ![previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]]) {
-          if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+        if (expiresDateMs) { // renewable subscription
+          NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
+          if (!previouslyStoredExpiresDateMs ||
+              [previouslyStoredExpiresDateMs isKindOfClass:NSNull.class]) {
             self.purchaseRecord[productIdentifier] = expiresDateMs;
             purchaseRecordDirty = YES;
+          } else {
+            if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+              self.purchaseRecord[productIdentifier] = expiresDateMs;
+              purchaseRecordDirty = YES;
+            }
           }
         }
       }];
-      
-      if (purchaseRecordDirty) [self savePurchaseRecord];
-      
+
+      if (purchaseRecordDirty) {
+        [self savePurchaseRecord];
+      }
+
       [self.purchaseRecord enumerateKeysAndObjectsUsingBlock:^(NSString *productIdentifier, NSNumber *expiresDateMs, BOOL *stop) {
         if (![expiresDateMs isKindOfClass: [NSNull class]]) {
           if ([[NSDate date] timeIntervalSince1970] > [expiresDateMs doubleValue]) {
@@ -394,56 +406,71 @@ static NSDictionary *errorDictionary;
 // TODO: FIX ME
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedDownloads:(NSArray *)downloads {
   [downloads enumerateObjectsUsingBlock:^(SKDownload *thisDownload, NSUInteger idx, BOOL *stop) {
+    SKDownloadState state;
 #if TARGET_OS_IPHONE
-    switch (thisDownload.downloadState) {
-      case SKDownloadStateActive:
-        break;
-      case SKDownloadStateFinished:
-        break;
-      default:
-        break;
-    }
+    state = thisDownload.downloadState;
 #elif TARGET_OS_MAC
-    switch (thisDownload.state) {
-      case SKDownloadStateActive:
-        break;
-      case SKDownloadStateFinished:
-        break;
-      default:
-        break;
-    }
+    state = thisDownload.state;
 #endif
+    switch (state) {
+    case SKDownloadStateActive:
+      [[NSNotificationCenter defaultCenter]
+       postNotificationName:kMKStoreKitDownloadProgressNotification
+       object:thisDownload
+       userInfo:@{thisDownload.transaction.payment.productIdentifier: @(thisDownload.progress)}];
+      break;
+      case SKDownloadStateFinished: {
+        NSString *documentDirectory = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+        NSString *contentDirectoryForThisProduct =
+        [[documentDirectory stringByAppendingPathComponent:@"Contents"]
+         stringByAppendingPathComponent:thisDownload.transaction.payment.productIdentifier];
+        [NSFileManager.defaultManager createDirectoryAtPath:contentDirectoryForThisProduct withIntermediateDirectories:YES attributes:nil error:nil];
+        NSError *error = nil;
+        [NSFileManager.defaultManager moveItemAtURL:thisDownload.contentURL
+                                              toURL:[NSURL URLWithString:contentDirectoryForThisProduct]
+                                              error:&error];
+        [[NSNotificationCenter defaultCenter]
+         postNotificationName:kMKStoreKitDownloadCompletedNotification
+         object:thisDownload
+         userInfo:@{thisDownload.transaction.transactionIdentifier: contentDirectoryForThisProduct}];
+        [queue finishTransaction:thisDownload.transaction];
+      }
+
+      break;
+    default:
+      break;
+    }
   }];
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
   for (SKPaymentTransaction *transaction in transactions) {
     switch (transaction.transactionState) {
-        
+
       case SKPaymentTransactionStatePurchasing:
         break;
-        
+
       case SKPaymentTransactionStateDeferred:
         [self deferredTransaction:transaction inQueue:queue];
         break;
-        
+
       case SKPaymentTransactionStateFailed:
         [self failedTransaction:transaction inQueue:queue];
         break;
-        
+
       case SKPaymentTransactionStatePurchased:
       case SKPaymentTransactionStateRestored: {
-        
+
         if (transaction.downloads.count > 0) {
-          [queue startDownloads:transaction.downloads];
+          [SKPaymentQueue.defaultQueue startDownloads:transaction.downloads];
+        } else {
+          [queue finishTransaction:transaction];
         }
-        
-        [queue finishTransaction:transaction];
-        
+
         NSDictionary *availableConsumables = [MKStoreKit configs][@"Consumables"];
         NSArray *consumables = [availableConsumables allKeys];
         if ([consumables containsObject:transaction.payment.productIdentifier]) {
-          
+
           NSDictionary *thisConsumable = availableConsumables[transaction.payment.productIdentifier];
           NSString *consumableId = thisConsumable[@"ConsumableId"];
           NSNumber *consumableCount = thisConsumable[@"ConsumableCount"];
@@ -455,7 +482,7 @@ static NSDictionary *errorDictionary;
           // subscriptions will eventually contain the expiry date after the receipt is validated during the next run
           self.purchaseRecord[transaction.payment.productIdentifier] = [NSNull null];
         }
-        
+
         [self savePurchaseRecord];
         [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchasedNotification
                                                             object:transaction.payment.productIdentifier];
