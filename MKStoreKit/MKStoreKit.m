@@ -189,6 +189,14 @@ static NSDictionary *errorDictionary;
 #pragma mark -
 #pragma mark Start requesting for available in app purchases
 
+- (void)startProductRequestWithProductIdentifiers:(NSArray*) items {
+
+  SKProductsRequest *productsRequest = [[SKProductsRequest alloc]
+                                        initWithProductIdentifiers:[NSSet setWithArray:items]];
+  productsRequest.delegate = self;
+  [productsRequest start];
+}
+
 - (void)startProductRequest {
   NSMutableArray *productsArray = [NSMutableArray array];
   NSArray *consumables = [[MKStoreKit configs][@"Consumables"] allKeys];
@@ -197,10 +205,7 @@ static NSDictionary *errorDictionary;
   [productsArray addObjectsFromArray:consumables];
   [productsArray addObjectsFromArray:others];
 
-  SKProductsRequest *productsRequest = [[SKProductsRequest alloc]
-                                        initWithProductIdentifiers:[NSSet setWithArray:productsArray]];
-  productsRequest.delegate = self;
-  [productsRequest start];
+  [self startProductRequestWithProductIdentifiers:productsArray];
 }
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {

@@ -142,7 +142,6 @@ It can't get simpler than this!
 
 ## Missing Features
 
-* Dynamically adding products to MKStoreKit from a remote resource
 * Keychain support for products
 * Local receipt verification using asn1c
 

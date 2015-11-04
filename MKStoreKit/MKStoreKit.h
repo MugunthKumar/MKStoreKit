@@ -161,6 +161,25 @@ extern NSString *const kMKStoreKitDownloadCompletedNotification;
 - (void)startProductRequest;
 
 /*!
+ *  @abstract Initializes MKStoreKit singleton by making the product request using StoreKit's SKProductRequest
+ *
+ *  @discussion
+ *	This method is normally called after fetching a list of products from your server.
+ *  If all your products are known before hand, 
+ *  fill them in MKStoreKitConfigs.plist and use -startProductRequest
+ *
+ *  If this method fails, MKStoreKit will not work
+ *  Most common reason for this method to fail is Internet connection being offline
+ *  It's your responsibility to call startProductRequest if the Internet connection comes online
+ *  and the previous call to startProductRequest failed (availableProducts.count == 0).
+ *
+ *  @seealso
+ *  -availableProducts
+ *  -startProductRequest
+ */
+- (void)startProductRequestWithProductIdentifiers:(NSArray*) items;
+
+/*!
  *  @abstract Restores In App Purchases made on other devices
  *
  *  @discussion
