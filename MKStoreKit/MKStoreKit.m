@@ -340,9 +340,20 @@ static NSDictionary *errorDictionary;
     if (!error) {
       NSDictionary *jsonResponse = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
       NSInteger status = [jsonResponse[@"status"] integerValue];
-      NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
-      [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
-      [self savePurchaseRecord];
+
+      if (jsonResponse[@"receipt"] != [NSNull null]) {
+        NSString *originalAppVersion = jsonResponse[@"receipt"][@"original_application_version"];
+        if (nil != originalAppVersion) {
+          [self.purchaseRecord setObject:originalAppVersion forKey:kOriginalAppVersionKey];
+          [self savePurchaseRecord];
+        }
+        else {
+          completionHandler(nil, nil);
+        }
+      }
+      else {
+        completionHandler(nil, nil);
+      }
 
       if (status != 0) {
         NSError *error = [NSError errorWithDomain:@"com.mugunthkumar.mkstorekit" code:status
@@ -350,9 +361,13 @@ static NSDictionary *errorDictionary;
         completionHandler(nil, error);
       } else {
         NSMutableArray *receipts = [jsonResponse[@"latest_receipt_info"] mutableCopy];
+        if (jsonResponse[@"receipt"] != [NSNull null]) {
         NSArray *inAppReceipts = jsonResponse[@"receipt"][@"in_app"];
         [receipts addObjectsFromArray:inAppReceipts];
         completionHandler(receipts, nil);
+        } else {
+          completionHandler(nil, nil);
+        }
       }
     } else {
       completionHandler(nil, error);
