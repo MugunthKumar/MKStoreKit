@@ -40,6 +40,7 @@
 
 @import StoreKit;
 NSString *const kMKStoreKitProductsAvailableNotification = @"com.mugunthkumar.mkstorekit.productsavailable";
+NSString *const kMKStoreKitProductsInvalidIdsNotification = @"com.mugunthkumar.mkstorekit.productsinvalidids";
 NSString *const kMKStoreKitProductPurchasedNotification = @"com.mugunthkumar.mkstorekit.productspurchased";
 NSString *const kMKStoreKitProductPurchaseFailedNotification = @"com.mugunthkumar.mkstorekit.productspurchasefailed";
 NSString *const kMKStoreKitProductPurchaseDeferredNotification = @"com.mugunthkumar.mkstorekit.productspurchasedeferred";
@@ -214,7 +215,8 @@ static NSDictionary *errorDictionary;
 
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
   if (response.invalidProductIdentifiers.count > 0) {
-    NSLog(@"Invalid Product IDs: %@", response.invalidProductIdentifiers);
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductsInvalidIdsNotification
+                                                        object:response.invalidProductIdentifiers];
   }
 
   self.availableProducts = response.products;
