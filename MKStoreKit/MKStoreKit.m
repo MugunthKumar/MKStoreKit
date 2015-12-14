@@ -136,7 +136,7 @@ static NSDictionary *errorDictionary;
   if (self.purchaseRecord == nil) {
     self.purchaseRecord = [NSMutableDictionary dictionary];
   }
-  NSLog(@"%@", self.purchaseRecord);
+//  NSLog(@"[MKStoreKit] self.purchaseRecord: %@", self.purchaseRecord);
 }
 
 - (void)savePurchaseRecord {
@@ -149,10 +149,10 @@ static NSDictionary *errorDictionary;
 #endif
 
   if (!success) {
-    NSLog(@"Failed to remember data record");
+    NSLog(@"[MKStoreKit] Failed to remember data record");
   }
 
-  NSLog(@"%@", self.purchaseRecord);
+//  NSLog(@"[MKStoreKit] self.purchaseRecord: %@", self.purchaseRecord);
 }
 
 #pragma mark -
@@ -225,7 +225,7 @@ static NSDictionary *errorDictionary;
 }
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
-  NSLog(@"Product request failed with error: %@", error);
+  NSLog(@"[MKStoreKit] Product request failed with error: %@", error);
 }
 
 #pragma mark -
@@ -250,7 +250,7 @@ static NSDictionary *errorDictionary;
   if (!self.availableProducts) {
     // TODO: FIX ME
     // Initializer might be running or internet might not be available
-    NSLog(@"No products are available. Did you initialize MKStoreKit by calling [[MKStoreKit sharedKit] startProductRequest]?");
+    NSLog(@"[MKStoreKit] No products are available. Did you initialize MKStoreKit by calling [[MKStoreKit sharedKit] startProductRequest]?");
   }
 
   if (![SKPaymentQueue canMakePayments]) {
@@ -292,10 +292,10 @@ static NSDictionary *errorDictionary;
   if([request isKindOfClass:[SKReceiptRefreshRequest class]]) {
     NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
     if ([[NSFileManager defaultManager] fileExistsAtPath:[receiptUrl path]]) {
-      NSLog(@"App receipt exists. Preparing to validate and update local stores.");
+      NSLog(@"[MKStoreKit] App receipt exists. Preparing to validate and update local stores.");
       [self startValidatingReceiptsAndUpdateLocalStore];
     } else {
-      NSLog(@"Receipt request completed but there is no receipt. The user may have refused to login, or the reciept is missing.");
+      NSLog(@"[MKStoreKit] Receipt request completed but there is no receipt. The user may have refused to login, or the reciept is missing.");
       // Disable features of your app, but do not terminate the app
     }
   }
@@ -314,7 +314,7 @@ static NSDictionary *errorDictionary;
   NSData *receiptData = [NSData dataWithContentsOfURL:receiptURL];
   if (!receiptData) {
     // Validation fails
-    NSLog(@"Receipt exists but there is no data available. Try refreshing the reciept payload and then checking again.");
+    NSLog(@"[MKStoreKit] Receipt exists but there is no data available. Try refreshing the reciept payload and then checking again.");
     completionHandler(nil, nil);
     return;
   }
@@ -389,7 +389,7 @@ static NSDictionary *errorDictionary;
 - (void)startValidatingReceiptsAndUpdateLocalStore {
   [self startValidatingAppStoreReceiptWithCompletionHandler:^(NSArray *receipts, NSError *error) {
     if (error) {
-      NSLog(@"Receipt validation failed with error: %@", error);
+      NSLog(@"[MKStoreKit] Receipt validation failed with error: %@", error);
       [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitReceiptValidationFailedNotification object:error];
     } else {
       __block BOOL purchaseRecordDirty = NO;
@@ -519,14 +519,14 @@ static NSDictionary *errorDictionary;
 }
 
 - (void)failedTransaction:(SKPaymentTransaction *)transaction inQueue:(SKPaymentQueue *)queue {
-  NSLog(@"Transaction Failed with error: %@", transaction.error);
+  NSLog(@"[MKStoreKit] Transaction Failed with error: %@", transaction.error);
   [queue finishTransaction:transaction];
   [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchaseFailedNotification
                                                       object:transaction.payment.productIdentifier];
 }
 
 - (void)deferredTransaction:(SKPaymentTransaction *)transaction inQueue:(SKPaymentQueue *)queue {
-  NSLog(@"Transaction Deferred: %@", transaction);
+  NSLog(@"[MKStoreKit] Transaction Deferred: %@", transaction);
   [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitProductPurchaseDeferredNotification
                                                       object:transaction.payment.productIdentifier];
 }
