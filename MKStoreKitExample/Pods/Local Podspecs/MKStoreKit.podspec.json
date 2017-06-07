@@ -1,0 +1,22 @@
+{
+  "name": "MKStoreKit",
+  "version": "6.0.0",
+  "summary": "An in-App Purchase framework for iOS 7.0+.",
+  "description": "                        An in-App Purchase framework for iOS 7.0+.\n                        MKStoreKit makes in-App Purchasing super simple by remembering your purchases,\n                        validating reciepts, and tracking virtual currencies (consumable purchases).\n                        Additionally, it keeps track of auto-renewable subscriptions and their expirationd dates.\n                        It couldn't be easier!\n",
+  "homepage": "https://github.com/MugunthKumar/MKStoreKit",
+  "license": "MIT",
+  "authors": {
+    "Mugunth Kumar": "mugunth@steinlogic.com"
+  },
+  "source": {
+    "git": "https://github.com/MugunthKumar/MKStoreKit.git",
+    "tag": "6.0.0"
+  },
+  "platforms": {
+    "ios": "7.0"
+  },
+  "requires_arc": true,
+  "public_header_files": "Pod/Classes/**/*.h",
+  "source_files": "Pod/Classes/**/*",
+  "frameworks": "StoreKit"
+}

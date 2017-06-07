@@ -1,0 +1,14 @@
+PODS:
+  - MKStoreKit (6.0.0)
+
+DEPENDENCIES:
+  - MKStoreKit (from `../MKStoreKit.podspec`)
+
+EXTERNAL SOURCES:
+  MKStoreKit:
+    :path: "../MKStoreKit.podspec"
+
+SPEC CHECKSUMS:
+  MKStoreKit: 6f870f4e5722c2a754bb55e6744154ec02f2bfcc
+
+COCOAPODS: 0.36.4
