@@ -391,23 +391,25 @@ static NSDictionary *errorDictionary;
       [[NSNotificationCenter defaultCenter] postNotificationName:kMKStoreKitReceiptValidationFailedNotification object:error];
     } else {
       __block BOOL purchaseRecordDirty = NO;
-      [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop) {
-        NSString *productIdentifier = receiptDictionary[@"product_id"];
-        NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
-        if (expiresDateMs) { // renewable subscription
-          NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
-          if (!previouslyStoredExpiresDateMs ||
-              [previouslyStoredExpiresDateMs isKindOfClass:NSNull.class]) {
-            self.purchaseRecord[productIdentifier] = expiresDateMs;
-            purchaseRecordDirty = YES;
-          } else {
-            if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
-              self.purchaseRecord[productIdentifier] = expiresDateMs;
-              purchaseRecordDirty = YES;
-            }
-          }
-        }
-      }];
+        [receipts enumerateObjectsUsingBlock:^(NSDictionary *receiptDictionary, NSUInteger idx, BOOL *stop)
+         {
+             NSString *productIdentifier = receiptDictionary[@"product_id"];
+             NSNumber *expiresDateMs = receiptDictionary[@"expires_date_ms"];
+             NSNumber *previouslyStoredExpiresDateMs = self.purchaseRecord[productIdentifier];
+             if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]] && ![previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]]) {
+                 if ([expiresDateMs doubleValue] > [previouslyStoredExpiresDateMs doubleValue]) {
+                     self.purchaseRecord[productIdentifier] = expiresDateMs;
+                     purchaseRecordDirty = YES;
+                 }
+             }
+             if (expiresDateMs && ![expiresDateMs isKindOfClass:[NSNull class]] && [previouslyStoredExpiresDateMs isKindOfClass:[NSNull class]]) {
+                 double currentTimeInMs = (double)[[NSDate date] timeIntervalSince1970] * 1000;
+                 if ([expiresDateMs doubleValue] > currentTimeInMs) {
+                     self.purchaseRecord[productIdentifier] = expiresDateMs;
+                     purchaseRecordDirty = YES;
+                 }
+             }
+         }];
 
       if (purchaseRecordDirty) {
         [self savePurchaseRecord];
